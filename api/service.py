@@ -189,8 +189,12 @@ class UserService(object):
         :param user_id:
         :return:
         """
-        res = dict()
         data = IntermediaryProfile.objects.get(user__id=user_id)
+        res = self._get_company_detail_dict(data)
+        return res
+
+    def _get_company_detail_dict(self, data):
+        res = dict()
         qualification_list = list()
         if data.qualification_info:
             for item in data.qualification_info:
@@ -208,12 +212,12 @@ class UserService(object):
             'organization_code': data.organization_code,
             'organization_name': data.organization_name,
             'corporation': data.corporation,
-            'service_type': data.service_type.id,
-            'service_type_name': data.service_type.server_name,
+            'service_type': data.service_type.id if data.service_type else '',
+            'service_type_name': data.service_type.server_name if data.service_type else '',
             'enterprise_type': data.enterprise_type,
             'enterprise_type_name': enterprise_type_name,
-            'section_id': data.service_type.section_id.id,
-            'section_name': data.service_type.section_id.section_name,
+            'section_id': data.service_type.section_id.id if data.service_type else '',
+            'section_name': data.service_type.section_id.section_name if data.service_type else '',
             'service_content': data.service_content,
             'address': data.address,
             'is_union': data.is_union,
@@ -275,7 +279,7 @@ class UserService(object):
         if service_type is not None:
             params.update({'service_type': service_type})
         if company_name is not None:
-            params.update({'company_name__contains': company_name})
+            params.update({'organization_name__contains': company_name})
         if rate_start is not None:
             params.update({'user__rate__gte': rate_start})
         if rate_end is not None:
@@ -286,23 +290,8 @@ class UserService(object):
 
         res = list()
         for item in data:
-            if item.enterprise_type is not None:
-                enterprise_type_name = list(filter(lambda x: x[0] == item.enterprise_type,
-                                                   IntermediaryProfile.ENTERPRISE_TYPE))[0][1]
-            else:
-                enterprise_type_name = ''
-            res.append({
-                'id': item.id,
-                'organization_name': item.organization_name,
-                'service_content': item.service_content,
-                'service_type': item.service_type,
-                'service_type_name': item.service_type.server_name if item.service_type else '',
-                'enterprise_type': item.enterprise_type,
-                'enterprise_type_name': enterprise_type_name,
-                'rate': item.user.rate,
-                'status': item.user.statustype,
-                'status_name': list(filter(lambda x: x[0] == item.user.statustype, User.STATUS_TYPE))[0][1]
-            })
+            inner_item = self._get_company_detail_dict(item)
+            res.append(inner_item)
         return total_count, res
 
     def check_service_type(self, service_type):
