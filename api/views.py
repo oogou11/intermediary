@@ -361,7 +361,7 @@ def update_company_info(request):
         "organization_code": "统一社会信用代码/组织机构代码",
         "organization_name": "机构名称",
         "corporation" : "法人",
-        "service_type": "服务类型",
+        "service_type": [],
         "enterprise_type": "机构类型",
         "service_content": "服务事项",
         "address" : "公司地址",

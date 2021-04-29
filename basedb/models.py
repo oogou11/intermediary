@@ -202,8 +202,7 @@ class IntermediaryProfile(models.Model):
     corporation = models.CharField(max_length=20, verbose_name="法人")
     enterprise_type = models.CharField(max_length=3, null=True, blank=True, verbose_name='机构类型',
                                        choices=ENTERPRISE_TYPE)
-    service_type = models.ForeignKey(ServeType,  verbose_name="服务类型", on_delete=models.SET_NULL,
-                                     null=True, blank=True, related_name='company_service_type')
+    service_type = models.ManyToManyField(ServeType,  verbose_name="服务类型")
     service_content = models.CharField(max_length=300, verbose_name="服务事项")
     address = models.CharField(max_length=100, verbose_name="公司地址")
     is_union = models.CharField(max_length=20, verbose_name='是否联合体')
@@ -316,8 +315,7 @@ class Project(models.Model):
     service_high_count = models.IntegerField(verbose_name='服务金额上限')
     content = models.CharField(max_length=800, verbose_name='服务内容')
     choice_type = models.CharField(default='0', max_length=3, choices=CHOICE_TYPE, verbose_name='选取方式')
-    server_type = models.ForeignKey(to=ServeType, null=True, blank=True, on_delete=models.SET_NULL,
-                                    verbose_name='所属服务类型')
+    server_type = models.ManyToManyField(to=ServeType, verbose_name='所属服务类型')
     create_user = models.ForeignKey(to=User, verbose_name='创建人', on_delete=models.CASCADE,
                                     related_name='create_project')
     proprietor = models.ForeignKey(to=ProprietorProfile, null=True, blank=True,

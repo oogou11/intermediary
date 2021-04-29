@@ -172,7 +172,7 @@ class AddProject(serializers.Serializer):
         write_only=True,
         trim_whitespace=True,
     )
-    server_type = serializers.IntegerField(
+    server_type = serializers.ListField(
         label=_('服务类型')
     )
 
@@ -347,6 +347,9 @@ class UpdateCompanySeriallizer(serializers.Serializer):
         allow_blank=False,
         write_only=True,
         trim_whitespace=False,
+    )
+    service_type = serializers.ListField(
+        label=_('服务类型')
     )
     service_content = serializers.CharField(
         label=_("服务事项"),

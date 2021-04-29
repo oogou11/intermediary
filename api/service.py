@@ -196,8 +196,8 @@ class UserService(object):
     def _get_company_detail_dict(self, data):
         res = dict()
         qualification_list = list()
-        if data.qualification_info:
-            for item in data.qualification_info:
+        if data.qualification_list:
+            for item in data.qualification_list:
                 qualification_list.append({
                     'name': item.get('name', ''),
                     'url':  item.get('url', '')
@@ -207,17 +207,23 @@ class UserService(object):
                                                IntermediaryProfile.ENTERPRISE_TYPE))[0][1]
         else:
             enterprise_type_name = ''
+        service_type = list()
+        for se in data.service_type.all():
+            service_type.append({
+                'server_type_id': se.id,
+                'server_type_picture_url': se.picture_url,
+                'server_type_name': se.server_name,
+                'section_id': se.section_id.id if se.section_id else '',
+                'section_name': se.section_id.section_name if se.section_id else '',
+            })
         res.update({
             'intermediary_id': data.id,
             'organization_code': data.organization_code,
             'organization_name': data.organization_name,
             'corporation': data.corporation,
-            'service_type': data.service_type.id if data.service_type else '',
-            'service_type_name': data.service_type.server_name if data.service_type else '',
+            'service_type': service_type,
             'enterprise_type': data.enterprise_type,
             'enterprise_type_name': enterprise_type_name,
-            'section_id': data.service_type.section_id.id if data.service_type else '',
-            'section_name': data.service_type.section_id.section_name if data.service_type else '',
             'service_content': data.service_content,
             'address': data.address,
             'is_union': data.is_union,
@@ -312,8 +318,14 @@ class UserService(object):
         :param data: 更新数据
         :return:
         """
-        data.update({'user': user})
+        new_service_type = list()
+        service_type = data.get('service_type')
+        for item in service_type:
+            inner_item = ServeType.objects.get(id=item)
+            new_service_type.append(inner_item)
+        data.update({'user': user, 'service_type': new_service_type})
         company = IntermediaryProfile.objects.filter(user=user)
+
         # 为空新增
         if company.count() == 0:
             new_company = IntermediaryProfile()
@@ -431,6 +443,15 @@ class ProjectService(object):
                     'status': item.status,
                     'status_name': list(filter(lambda x: x[0] == item.status, BidProject.STATUS))[0][1]
                 })
+        server_type = list()
+        for se in project.server_type.all():
+            server_type.append({
+                'server_type_id': se.id,
+                'server_type_picture_url': se.picture_url,
+                'server_type_name': se.server_name,
+                'section_id': se.section_id.id if se.section_id else '',
+                'section_name': se.section_id.section_name if se.section_id else '',
+            })
         res = {
             'id': project.id,
             'project_name': project.project_name,
@@ -456,9 +477,7 @@ class ProjectService(object):
             'file_url': project.file_url,
             'contract': project.contract,
             'sys_info': project.sys_info,
-            'server_type': project.server_type.id if project.server_type else '',
-            'server_type_picture_url': project.server_type.picture_url if project.server_type else '',
-            'server_type_name': project.server_type.server_name if project.server_type else '',
+            'server_type': server_type,
         }
         return res
 
@@ -520,11 +539,17 @@ class ProjectService(object):
         """
         begin_time = data.get('begin_time')
         finish_time = data.get('finish_time')
+        server_type = data.get('server_type', [])
+        new_server_type = list()
+        for item in server_type:
+            new_server_type.append(ServeType.objects.get(id=item))
         data.update({'begin_time': datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S'),
                      'finish_time': datetime.datetime.strptime(finish_time, '%Y-%m-%d %H:%M:%S'),
                      'create_user': user,
                      'proprietor': user.proprietor_user.first(),
+                     'server_type': new_server_type
                      })
+
         pro = Project()
         for name, value in data.items():
             setattr(pro, name, value)
