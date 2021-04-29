@@ -155,7 +155,7 @@ class IntermediaryProfileIn(admin.StackedInline):
               'service_type', 'service_content', 'address', 'is_union',
               'id_card_front_url', 'id_card_back_url', 'remark',
               'contract_person', 'co_id_card_front_url', 'co_id_card_back_url',
-              'authorize_url', 'qualification_info', 'qualification_list',
+              'authorize_url', 'qualification_info', 'super_rate', 'qualification_list',
               'qualification_file_list',
               'update_time')
     readonly_fields = ['qualification_file_list']
