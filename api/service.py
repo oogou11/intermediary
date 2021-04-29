@@ -592,6 +592,10 @@ class ProjectService(object):
 
             # 更新User的rate总评分
             user_id = bid_all_projects.first().bid_user.id
+            # 最后评分
+            if win_bid_project_info.bid_company.super_rate is not None:  # 兼容旧数据
+                new_score = (new_score + win_bid_project_info.bid_company.super_rate) / 2
+
             User.objects.filter(id=user_id).update(**{'rate': int(new_score),
                                                       'update_time': datetime.datetime.now()})
 
