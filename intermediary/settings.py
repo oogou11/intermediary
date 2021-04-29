@@ -93,8 +93,8 @@ DATABASES = {
         'NAME': 'db',
         'USER': 'postgres',
         'PASSWORD': 'ngzjcs@123',
-        'HOST': '172.18.0.99',
-        'PORT': '5432'
+        'HOST': '223.240.102.98',
+        'PORT': '9082'
     }
 }
 
@@ -346,7 +346,7 @@ SIMPLE_JWT = {
 }
 
 REDIS = {
-    'host': '172.18.0.88',
+    'host': '172.0.0.1',
     'password': '',
     'db': 0,
     'port': 6379}
@@ -388,7 +388,7 @@ CORS_ALLOW_HEADERS = (
 
 
 UPLOADFILES_DIRS = os.path.join(BASE_DIR, 'static/files')
-DOMAIN_HOST = 'http://223.240.102.98:9000/'
+DOMAIN_HOST = 'http://127.0.0.1:8090/'
 
 MESSAGE_SECRETID = 'AKIDqlQ3VgXHimiOcO8B7n7WdFxHMcIzJDex'
 MESSAGE_SECRETKEY = 'E8TesgYY1IBm9WbTuJWdRjlRSE0ZmjiQ'  # 密钥
