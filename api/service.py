@@ -739,7 +739,7 @@ class ProjectService(object):
         pro = Project.objects.get(id=project_id)
         pro.status = '4'
         pro.save()
-        return True, 200
+        return True, data.first()
 
     def update_bid_info(self, project_id, medium_user, data):
         """
@@ -950,17 +950,20 @@ class AuditService(object):
         """
         project = Project.object.get(id=project_id)
         if project.choice_type == '0':  # 择优选取
-            is_selected = cls()._select_the_best(project)
+            is_selected, bid_company = cls()._select_the_best(project)
         elif project.choice_type == '1':  # 竞价选取
-            is_selected = cls()._select_price_lowest(project)
+            is_selected, bid_company = cls()._select_price_lowest(project)
         elif project.choice_type == '2':  # 平均价选取
-            is_selected = cls()._select_average_price(project)
+            is_selected, bid_company = cls()._select_average_price(project)
         else:
             is_selected = False
         if not is_selected:
             project.status = '3'  # 只有该状态--选表中--业主才会干预选标
             project.sys_info = '系统无法自动选标，请人工选标!'
             project.save()
+        else:
+            # 竞标成功发送短信
+            SendMessagServie().win_bind_msg(bid_company, project)
 
     @classmethod
     def abolish_project(cls, project_id):
@@ -996,14 +999,14 @@ class AuditService(object):
                     bid_company.save()
                     project.status = '4'  # 已选表
                     project.save()
-                    return True
+                    return True, bid_company
             except Exception as ex:
                 error_logger.error('time:{}，project_id:{},function:{},msg:{}'.
                                    format(datetime.datetime.now(),
                                           project.id,
                                           '_select_the_best',
                                           ex))
-                return False
+                return False, None
 
     def _select_price_lowest(self, project):
         """
@@ -1025,14 +1028,14 @@ class AuditService(object):
                     bid_company.save()
                     project.status = '4'  # 已选表
                     project.save()
-                    return True
+                    return True, bid_company
             except Exception as ex:
                 error_logger.error('time:{}，project_id:{},function:{},msg:{}'.
                                    format(datetime.datetime.now(),
                                           project.id,
                                           '_select_price_lowest',
                                           ex))
-                return False
+                return False, None
 
     def _select_average_price(self, project):
         """
@@ -1071,14 +1074,14 @@ class AuditService(object):
                 bid_company.save()
                 project.status = '4'  # 已选表
                 project.save()
-                return True
+                return True, bid_company
             except Exception as ex:
                 error_logger.error('time:{}，project_id:{},function:{},msg:{}'.
                                    format(datetime.datetime.now(),
                                           project.id,
                                           '_select_price_lowest',
                                           ex))
-                return False
+                return False, None
 
 
 class AggregateDataService(object):
@@ -1154,15 +1157,15 @@ class SendMessagServie(object):
             phones.append('86{}'.format(item.phone))
         SendMessage().send(list(set(phones)), self.notice_bid, [project.project_name])
 
-    def win_bind_msg(self, owner, win_medium, project):
+    def win_bind_msg(self, win_company, project):
         """
         发送中标通知
-        :param win_medium: 中介信息
+        :param win_company: 中标公司
         :param project: 项目信息
         :return:
         """
-        phones = ['86{}'.format(owner.user.phone)]
-        SendMessage().send(phones, self.win_bid, [project.project_name, win_medium.organization_name])
+        phones = ['86{}'.format(win_company.user.phone)]
+        SendMessage().send(phones, self.win_bid, [project.project_name, win_company.organization_name])
 
 
 

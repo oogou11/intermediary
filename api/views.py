@@ -287,8 +287,12 @@ def select_bid_company(request):
     intermediary_id = params.get('intermediary_id', None)
     if project_id is None or intermediary_id is None:
         return {'code': 10103}
-    is_selected, code = ProjectService().select_bid_company(project_id, intermediary_id)
-    return {'code': code}
+    is_selected, code_or_bid_info = ProjectService().select_bid_company(project_id, intermediary_id)
+    if not is_selected:
+        return {'code': code_or_bid_info}
+    # 短信通知中标公司
+    SendMessagServie().win_bind_msg(code_or_bid_info.bid_company, code_or_bid_info.project)
+    return {'code': 200}
 
 
 @csrf_exempt
@@ -307,7 +311,7 @@ def company_list(request):
     company_name = None
     if body_info is not None:
         params = json.loads(body_info)
-        offset = params.get('offset', '1')
+        offset = params.get('offset', '0')
         limit = params.get('limit', '10')
         company_name = params.get('company_name', None)
         service_type = params.get('service_type', None)
@@ -804,7 +808,7 @@ def project_list(request):
     }
     """
     params = json.loads(request.body)
-    offset = params.get('offset', '1')
+    offset = params.get('offset', '0')
     limit = params.get('limit', '10')
     if isinstance(offset, str):
         offset = int(offset)
@@ -882,7 +886,7 @@ def company_bid_projects(request):
     :return:
     """
     params = json.loads(request.body)
-    offset = params.get('offset', '1')
+    offset = params.get('offset', '0')
     limit = params.get('limit', '10')
     if isinstance('offset', str):
         offset = int(offset)
