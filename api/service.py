@@ -1155,10 +1155,11 @@ class SendMessagServie(object):
         :param project: 项目ID
         :return:
         """
-        media = IntermediaryProfile.objects.filter(service_type__in=project.server_type, status='2')
+        all_type_ids = list(item.id for item in project.server_type.all())
+        media = IntermediaryProfile.objects.filter(service_type__in=all_type_ids, status='2')
         phones = list()
         for item in media:
-            phones.append('86{}'.format(item.phone))
+            phones.append('86{}'.format(item.user.phone))
         SendMessage().send(list(set(phones)), self.notice_bid, [project.project_name])
 
     def win_bind_msg(self, win_company, project):

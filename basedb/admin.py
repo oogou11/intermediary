@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from .forms import *
 from django.contrib.auth.models import Group
 from rest_framework.authtoken.models import TokenProxy
+from api.service import SendMessagServie
 
 
 admin.site.unregister(Group)  # 菜单不显示用户组
@@ -409,6 +410,13 @@ class ProjectAdmin(admin.ModelAdmin):
             return '无'
     file_url_list.short_description = '上传资料展示'
     contract_list.short_description = '合同资料展示'
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            if obj.status == '2':  # 审核通过的项目，提醒竞标
+                SendMessagServie().notice_bid_msg(obj)
+
+        return super(ProjectAdmin, self).save_model(request, obj, form, change)
 
 
 @admin.register(BidProject)
