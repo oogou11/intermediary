@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from shortuuidfield import ShortUUIDField
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 
 class UserManager(BaseUserManager):
@@ -329,8 +330,12 @@ class Project(models.Model):
                                      choices=User_Qualifications, verbose_name='资质要求')
     remark = models.CharField(max_length=200, verbose_name='其他要求', null=True, blank=True)
     file_url = models.JSONField(max_length=200, verbose_name='上传文件', null=True, blank=True)
+    file_url_address = models.FileField(upload_to='static/files/%y/%m/%d', null=True, blank=True,
+                                        verbose_name='文件存放地址')
     status = models.CharField(default='0', max_length=3, choices=STATUS_TYPE, verbose_name='项目状态')
     contract = models.JSONField(max_length=200, default=None, null=True, blank=True, verbose_name='项目合同')
+    contract_address = models.FileField(upload_to='static/files/%y/%m/%d', null=True, blank=True,
+                                        verbose_name='合同文件存放地址')
     score_level_one = models.IntegerField(default=0, verbose_name='一级服务评价')  # 满分5分
     score_level_two = models.IntegerField(default=0, verbose_name='二级服务评价')  # 满分5分
     score_level_three = models.IntegerField(default=0, verbose_name='三级服务评价')  # 满分5分

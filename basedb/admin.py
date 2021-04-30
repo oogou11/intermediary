@@ -45,6 +45,26 @@ admin.AdminSite.site_header = settings.BASESET["title"]
 admin.AdminSite.site_title = settings.BASESET["title"]
 
 
+def upload_file(file, role=None):
+    origin_name = file.name
+    relative_path = '{}_{}/'.format('admin', 'server_type')
+    folder_path = '{}/{}'.format(settings.UPLOADFILES_DIRS, relative_path)
+    file_type = file.content_type.split('/')[-1]
+    # 路径不存在创建路径
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    new_file_name = '{}.{}'.format(str(uuid.uuid1()), file_type)
+    full_filename = os.path.join(folder_path, new_file_name)
+    pic_data = open(full_filename, 'wb+')
+    for chunk in file.chunks():
+        pic_data.write(chunk)
+    pic_data.close()
+    url = 'api/download?url=' + relative_path + new_file_name
+    if role is not None:
+        url += '&role=2'
+    return origin_name, url
+
+
 @admin.register(ServeType)
 class ServeTypeAdmin(admin.ModelAdmin):
     form = SeverTypeAdmin
@@ -80,19 +100,7 @@ class ServeTypeAdmin(admin.ModelAdmin):
         url = ''
         if form.files:
             file = form.files.get('picture_url')
-            relative_path = '{}_{}/'.format('admin', 'server_type')
-            folder_path = '{}/{}'.format(settings.UPLOADFILES_DIRS, relative_path)
-            file_type = file.content_type.split('/')[-1]
-            # 路径不存在创建路径
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
-            new_file_name = '{}.{}'.format(str(uuid.uuid1()), file_type)
-            full_filename = os.path.join(folder_path, new_file_name)
-            pic_data = open(full_filename, 'wb+')
-            for chunk in file.chunks():
-                pic_data.write(chunk)
-            pic_data.close()
-            url = 'api/download?url=' + relative_path + new_file_name + '&role=2'
+            origin_name, url = upload_file(file, '2')
         obj.picture_url = url
         super().save_model(request, obj, form, change)
 
@@ -303,11 +311,10 @@ class ProjectAdmin(admin.ModelAdmin):
     """
     中介审核 template model
     """
-
+    form = AutoProjectAdminForm
     list_display = ('id', 'project_name')
     search_fields = ('project_name', )
     list_per_page = 100
-
     def file_url_list(self, obj):
         """
         证件图片
@@ -362,48 +369,6 @@ class ProjectAdmin(admin.ModelAdmin):
         else:
             return '无'
 
-    def project_message_area(self, obj):
-        """
-        系统消息--流标信息
-        :param obj:
-        :return:
-        """
-        textarea_info = '<textarea rows="3" cols="80">{}</textarea>'.format(obj.project_message)
-        return mark_safe(textarea_info)
-
-    def sys_info_area(self, obj):
-        """
-        系统消息--竞标
-        :param obj:
-        :return:
-        """
-        textarea_info = '<textarea rows="3" cols="80">{}</textarea>'.format(obj.sys_info)
-        return mark_safe(textarea_info)
-
-    file_url_list.short_description = '上传文件'
-    contract_list.short_description = '合同'
-    sys_info_area.short_description = '系统信息:自动化'
-    project_message_area.short_description = '系统信息:项目'
-
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        """
-        重写编辑页面
-        :param request:
-        :param object_id:
-        :param extra_context:
-        :return:
-        """
-        self.fields = ("status", "project_name", "contract_person", "contract_phone", "project_scale",
-                       "funds_source", "project_limit", "service_low_count", "service_high_count",
-                       "content", "choice_type", "server_type", "proprietor",
-                       "begin_time", "finish_time", "qualification", "remark",
-                       "file_url_list", "contract_list",
-                       "average_score", 'sys_info_area', 'project_message_area')
-        self.readonly_fields = ("file_url_list", "contract_list", 'sys_info_area', 'project_message_area')
-        return super(ProjectAdmin, self).change_view(request, object_id, form_url, extra_context=extra_context)
-
-
     def save_model(self, reqeust, obj, form, change):
         """
         :param reqeust:
@@ -412,12 +377,22 @@ class ProjectAdmin(admin.ModelAdmin):
         :param change:
         :return:
         """
-        if change:
-            pro = Project.objects.get(id=obj.id)
-            pro.status = obj.status
-            pro.save()
-        else:
-            obj.save()
+        file_files = reqeust.FILES.getlist('file_url_address')  # 上传文件
+        contract_files = reqeust.FILES.getlist('contract_address')  # 合同
+        if len(file_files) > 0:
+            file_url = list()
+            for file in file_files:
+                origin_name, url = upload_file(file, '2')
+                file_url.append({'name': origin_name, 'url': url})
+            obj.file_url = file_url
+
+        if len(contract_files) > 0:
+            contract_url = list()
+            for file in contract_files:
+                origin_name, url = upload_file(file, '2')
+                contract_url.append({'name': origin_name, 'url': url})
+            obj.contract = contract_url
+        obj.save()
 
 
 @admin.register(BidProject)

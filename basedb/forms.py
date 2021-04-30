@@ -39,8 +39,18 @@ class AutoProjectAdminForm(forms.ModelForm):
     """
     项目
     """
-    sys_info_area = forms.Textarea()
-    project_message_area = forms.Textarea()
+    file_url_address = forms.FileField(required=False,
+                                       widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                                       label='上传文件admin操作')
+    contract_address = forms.FileField(required=False,
+                                       widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                                       label='合同admin操作')
+    sys_info = forms.CharField(widget=forms.Textarea(attrs={'rows': '3', 'cols': '80'}),
+                               label="系统信息:选标",
+                               required=False)
+    project_message = forms.CharField(widget=forms.Textarea(attrs={'rows': '3', 'cols': '80'}),
+                                      label="系统信息:流标",
+                                      required=False)
 
     class Meta:
         models = Project
