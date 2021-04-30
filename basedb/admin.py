@@ -176,7 +176,7 @@ class IntermediaryProfileIn(admin.StackedInline):
         :param obj:
         :return:
         """
-        if obj.co_id_card_front_url is not None:
+        if obj.co_id_card_front_url is not None and obj.co_id_card_front_url != '':
             file_url = get_local_url(obj.co_id_card_front_url)
             return mark_safe(file_url)
         return '无'
@@ -187,7 +187,7 @@ class IntermediaryProfileIn(admin.StackedInline):
         :param obj:
         :return:
         """
-        if obj.co_id_card_back_url is not None:
+        if obj.co_id_card_back_url is not None and obj.co_id_card_back_url != '':
             file_url = get_local_url(obj.co_id_card_back_url)
             return mark_safe(file_url)
         return '无'
@@ -198,7 +198,7 @@ class IntermediaryProfileIn(admin.StackedInline):
         :param obj:
         :return:
         """
-        if obj.authorize_url is not None:
+        if obj.authorize_url is not None and obj.authorize_url != '':
             file_url = get_local_url(obj.authorize_url)
             return mark_safe(file_url)
         return '无'
@@ -209,7 +209,7 @@ class IntermediaryProfileIn(admin.StackedInline):
         :param obj:
         :return:
         """
-        if obj.id_card_front_url is not None:
+        if obj.id_card_front_url is not None and obj.id_card_front_url != '':
             file_url = get_local_url(obj.id_card_front_url)
             return mark_safe(file_url)
         return '无'
@@ -220,7 +220,7 @@ class IntermediaryProfileIn(admin.StackedInline):
         :param obj:
         :return:
         """
-        if obj.id_card_back_url is not None:
+        if obj.id_card_back_url is not None and obj.id_card_back_url != '':
             file_url = get_local_url(obj.id_card_back_url)
             return mark_safe(file_url)
         return '无'

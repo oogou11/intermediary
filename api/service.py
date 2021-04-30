@@ -10,6 +10,7 @@ from basedb.models import ProprietorProfile, IntermediaryProfile
 from basedb.models import Project, BidProject, Interactive, ServeType, SectionType
 from basedb.models import AuditLog, VerifyCode
 from django.db import transaction
+from .send_message import SendMessage
 import logging
 collect_logger = logging.getLogger('collect')
 error_logger = logging.getLogger('error')
@@ -306,10 +307,13 @@ class UserService(object):
         :param service_type:
         :return:
         """
-        data = ServeType.objects.filter(id=service_type).first()
-        if data is None:
-            return False, None
-        return True, data
+        list_service = list()
+        for id in service_type:
+            data = ServeType.objects.filter(id=id).first()
+            if data is None:
+                return False, None
+            list_service.append(data)
+        return True, list_service
 
     def update_company_info(self, user, data):
         """
@@ -318,26 +322,26 @@ class UserService(object):
         :param data: 更新数据
         :return:
         """
-        new_service_type = list()
         service_type = data.get('service_type')
-        for item in service_type:
-            inner_item = ServeType.objects.get(id=item)
-            new_service_type.append(inner_item)
-        data.update({'user': user, 'service_type': new_service_type})
+        new_service_type = ServeType.objects.filter(id__in=service_type).all()
+        data.update({'user': user})
         company = IntermediaryProfile.objects.filter(user=user)
-
+        del data['service_type']
         # 为空新增
         if company.count() == 0:
             new_company = IntermediaryProfile()
             for name, value in data.items():
-                setattr(new_company, name, value)
+                if name != 'service_type':
+                    setattr(new_company, name, value)
             new_company.save()
-            return True, new_company.id
+            new_company.service_type.set(new_service_type)
+            return True, new_company
         first_company = company.first()
         if first_company.status not in ('0', '3'):
             return False, None
         company.update(**data)
-        return True, first_company.id
+        first_company.service_type.set(new_service_type)
+        return True, first_company
 
     def get_user_by_token(self, token):
         """
@@ -1109,4 +1113,57 @@ class AggregateDataService(object):
         """
         count = IntermediaryProfile.objects.count()
         return {'intermediary_count': count}
+
+
+class SendMessagServie(object):
+    """
+    发送短信业务
+    """
+    def __init__(self):
+        self.verify_msg_id = '934020'
+        self.notice_bid = '942649'
+        self.win_bid = '943587'
+
+    def send_user_to_verify(self, business_type, name):
+        """
+        发送给管理员审核信息
+        :param business_type: 业务类型-1: 业主资料，2: 中介资料，3: 项目资料
+        :param name: 对应的名称
+        :return:
+        """
+        admins = User.objects.filter(customer_type='0')
+        phones = list()
+        for item in admins:
+
+            if item.phone is not None:
+                phones.append('86{}'.format(item.phone))
+        if business_type in (1, 2):
+            params = [name, '资料']
+        else:
+            params = [name, '项目']
+        SendMessage().send(list(set(phones)), self.verify_msg_id, params)
+
+    def notice_bid_msg(self, project):
+        """
+        发送竞标通知
+        :param project: 项目ID
+        :return:
+        """
+        media = IntermediaryProfile.objects.filter(service_type__in=project.server_type, status='2')
+        phones = list()
+        for item in media:
+            phones.append('86{}'.format(item.phone))
+        SendMessage().send(list(set(phones)), self.notice_bid, [project.project_name])
+
+    def win_bind_msg(self, owner, win_medium, project):
+        """
+        发送中标通知
+        :param win_medium: 中介信息
+        :param project: 项目信息
+        :return:
+        """
+        phones = ['86{}'.format(owner.user.phone)]
+        SendMessage().send(phones, self.win_bid, [project.project_name, win_medium.organization_name])
+
+
 

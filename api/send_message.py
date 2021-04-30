@@ -62,7 +62,7 @@ class SendMessage(object):
                 count += 1
         return code
 
-    def send(self, phone, template_id=None, params=None):
+    def send(self, phones, template_id=None, params=None):
         """
         发送短信
         :param phone: 电话号码
@@ -86,7 +86,7 @@ class SendMessage(object):
             req.Sign = settings.MESSAGE_SIGN
             req.TemplateID = template_id  # 模版ID
             req.TemplateParamSet = params  # 模版参数
-            req.PhoneNumberSet = ["+86{}".format(phone)]
+            req.PhoneNumberSet = phones
 
             resp = client.SendSms(req)
             ten_res = resp.to_json_string(indent=2)

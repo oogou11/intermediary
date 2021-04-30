@@ -203,7 +203,7 @@ class IntermediaryProfile(models.Model):
     corporation = models.CharField(max_length=20, verbose_name="法人")
     enterprise_type = models.CharField(max_length=3, null=True, blank=True, verbose_name='机构类型',
                                        choices=ENTERPRISE_TYPE)
-    service_type = models.ManyToManyField(ServeType,  verbose_name="服务类型")
+    service_type = models.ManyToManyField(ServeType, verbose_name="服务类型")
     service_content = models.CharField(max_length=300, verbose_name="服务事项")
     address = models.CharField(max_length=100, verbose_name="公司地址")
     is_union = models.CharField(max_length=20, verbose_name='是否联合体')
@@ -217,8 +217,8 @@ class IntermediaryProfile(models.Model):
     qualification_info = models.CharField(max_length=200, verbose_name='资质说明', choices=User_Qualifications,
                                           null=True, blank=True)
     qualification_list = models.JSONField(default=list, null=True, blank=True,
-                                          max_length=200, verbose_name='资质证明')
-    status = models.CharField(max_length=200, verbose_name='状态', choices=Status)
+                                          max_length=400, verbose_name='资质证明')
+    status = models.CharField(max_length=3, verbose_name='状态', choices=Status)
     update_time = models.DateTimeField(null=True, blank=True, verbose_name='更新时间')
     super_rate = models.IntegerField(default=5, null=True, blank=True, verbose_name='上级评分')
 

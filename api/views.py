@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from django.http import FileResponse
-from .service import UserService, AuditService, ProjectService
+from .service import UserService, AuditService, ProjectService, SendMessagServie
 from .service import ServiceTypeService
 from .task import CoreTasks
 from .serializer import *
@@ -393,18 +393,14 @@ def update_company_info(request):
     if user is None:
         return {'code': 10013}
 
-    is_exists, company_service_type = service.check_service_type(data.get('service_type'))
-    if not is_exists:
-        return {'code': 20022}
-
-    data.update({'service_type': company_service_type})
-
-    can_be_updated, company_id = service.update_company_info(user, data)
+    can_be_updated, company = service.update_company_info(user, data)
     if not can_be_updated:
         return {'code': 20019}
     # # 更新用户状态--审核中
     if data.get('status') == '1':
         audit_service.update_user_status(request.user.id)
+        # 短信通知管理员
+        SendMessagServie().send_user_to_verify(2, company.organization_name)
     return {'code': 200, 'data': {}}
 
 
@@ -820,7 +816,7 @@ def send_message(reqeust):
     phone = params.get('phone')
     if phone is None:
         return {'code': 10103}
-    is_send, code = SendMessage().send(phone)
+    is_send, code = SendMessage().send(['86'+phone])
     if is_send is True:
         UserService().insert_verify_code(phone, code)  # 保存验证码记录
         return {'code': 200}
