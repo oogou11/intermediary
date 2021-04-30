@@ -53,9 +53,18 @@ def get_token(request):
             token_data = service.update_toke(user)
         else:
             token_data = service.create_token(user)
+        if user.customer_type == '1':
+            company_name = user.proprietor_user.first().organization_name if user.proprietor_user.first() else ''
+        elif user.customer_type == '2':
+            company_name = user.user_company.first().organization_name if user.user_company.first() else ''
+        else:
+            company_name = ''
         return {'code': 200, 'data': {'token': token_data,
                                       'user_id': user.id,
                                       'username': user.username,
+                                      'phone': user.phone,
+                                      'email': user.email,
+                                      'company_name': company_name,
                                       'role': user.customer_type,
                                       'status': user.statustype,
                                       'status_name': user.get_status_name}}
