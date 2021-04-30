@@ -64,6 +64,17 @@ def upload_file(file, role=None):
         url += '&role=2'
     return origin_name, settings.DOMAIN_HOST + url
 
+def get_local_url(file, name=None):
+    """
+    获取本地图片路径 for admin
+    :param file:
+    :return:
+    """
+    prefix = '/static/files/'
+    path_url = file.split('url=')[1].split('&')[0]
+    file_url = '<a href="{}">{}</a> </br>'.format(prefix + path_url, path_url if name is None else name)
+    return file_url
+
 
 @admin.register(ServeType)
 class ServeTypeAdmin(admin.ModelAdmin):
@@ -146,12 +157,73 @@ class IntermediaryProfileIn(admin.StackedInline):
     extra = 0
     fields = ('status', 'organization_name', 'organization_code', 'corporation',
               'service_type', 'service_content', 'address', 'is_union',
-              'id_card_front_url', 'id_card_back_url', 'remark',
-              'contract_person', 'co_id_card_front_url', 'co_id_card_back_url',
-              'authorize_url', 'qualification_info', 'super_rate', 'qualification_list',
-              'qualification_file_list',
-              'update_time')
-    readonly_fields = ['qualification_file_list']
+              'remark', 'contract_person',   'qualification_info', 'super_rate',
+              'update_time', 'qualification_file_list',
+              'file_id_card_front_url', 'file_id_card_back_url',
+              'file_co_id_card_front_url', 'file_co_id_card_back_url',
+              'file_authorize_url')
+    readonly_fields = ['qualification_file_list',
+                       'file_id_card_front_url',
+                       'file_id_card_back_url',
+                       'file_co_id_card_front_url',
+                       'file_co_id_card_back_url',
+                       'file_authorize_url',
+                       'qualification_file_list', ]
+
+    def file_co_id_card_front_url(self, obj):
+        """
+        授权人: 身份证正面
+        :param obj:
+        :return:
+        """
+        if obj.co_id_card_front_url is not None:
+            file_url = get_local_url(obj.co_id_card_front_url)
+            return mark_safe(file_url)
+        return '无'
+
+    def file_co_id_card_back_url(self, obj):
+        """
+        授权人: 身份证背面
+        :param obj:
+        :return:
+        """
+        if obj.co_id_card_back_url is not None:
+            file_url = get_local_url(obj.co_id_card_back_url)
+            return mark_safe(file_url)
+        return '无'
+
+    def file_authorize_url(self, obj):
+        """
+        授权书
+        :param obj:
+        :return:
+        """
+        if obj.authorize_url is not None:
+            file_url = get_local_url(obj.authorize_url)
+            return mark_safe(file_url)
+        return '无'
+
+    def file_id_card_front_url(self, obj):
+        """
+        身份正正面
+        :param obj:
+        :return:
+        """
+        if obj.id_card_front_url is not None:
+            file_url = get_local_url(obj.id_card_front_url)
+            return mark_safe(file_url)
+        return '无'
+
+    def file_id_card_back_url(self, obj):
+        """
+        身份证背面
+        :param obj:
+        :return:
+        """
+        if obj.id_card_back_url is not None:
+            file_url = get_local_url(obj.id_card_back_url)
+            return mark_safe(file_url)
+        return '无'
 
     def qualification_file_list(self, obj):
         """
@@ -163,27 +235,21 @@ class IntermediaryProfileIn(admin.StackedInline):
             if isinstance(obj.qualification_list, list) and len(obj.qualification_list) == 0:
                 return '无'
             file_url = ''
-            prefix = '/static/files/'
             for p in obj.qualification_list:
                 p_url = p.get('url', '')
                 if 'url=' not in p_url:
                     continue
-                path_url = p_url.split('url=')[1].split('&')[0]
-                backend_prefix = path_url.split('.')[1]
-                if backend_prefix in ('jpg', 'jpeg', 'JPG', 'JPEG', 'png', 'PNG'):
-                    file_url += '<label>{}</label>' \
-                                '<img src="{}" width="400px" height="400px" />'.format(
-                        p.get('name'), prefix + path_url
-                    )
-                else:
-                    file_url += '</br>'
-                    file_url += '<a href="{}">{}</a>'.format(prefix + path_url, p.get('name')
-                    )
+                file_url += get_local_url(p_url, p.get('name'))
             return mark_safe(file_url)
         else:
             return '无'
 
+    file_id_card_back_url.short_description = '法人身份证背面'
+    file_id_card_front_url.short_description = '法人身份证正面'
     qualification_file_list.short_description = '资料展示'
+    file_authorize_url.short_description = '授权书'
+    file_co_id_card_back_url.short_description = '授权人身份证正面'
+    file_co_id_card_front_url.short_description = '授权人身份证背面'
 
 
 class SuperUserModel(User):
