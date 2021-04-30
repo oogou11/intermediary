@@ -253,17 +253,17 @@ class UserService(object):
         owner = ProprietorProfile.objects.filter(user=user)
         # 为空新增
         if owner.count() == 0:
-            new_owern = ProprietorProfile()
+            new_owner = ProprietorProfile()
             for name, value in data.items():
-                setattr(new_owern, name, value)
-            new_owern.save()
-            return True, new_owern.id
+                setattr(new_owner, name, value)
+            new_owner.save()
+            return True, new_owner
         # 非驳回状态不允许修改
         first_data = owner.first()
         if first_data.status not in ('0' '3'):
             return False, None
         owner.update(**data)
-        return True, first_data.id
+        return True, first_data
 
     def get_company_info(self, company_id):
         """
@@ -543,22 +543,20 @@ class ProjectService(object):
         """
         begin_time = data.get('begin_time')
         finish_time = data.get('finish_time')
-        server_type = data.get('server_type', [])
-        new_server_type = list()
-        for item in server_type:
-            new_server_type.append(ServeType.objects.get(id=item))
+        new_server_type = ServeType.objects.filter(id__in=data.get('server_type', []))
+        del data['server_type']
         data.update({'begin_time': datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S'),
                      'finish_time': datetime.datetime.strptime(finish_time, '%Y-%m-%d %H:%M:%S'),
                      'create_user': user,
-                     'proprietor': user.proprietor_user.first(),
-                     'server_type': new_server_type
+                     'proprietor': user.proprietor_user.first()
                      })
 
         pro = Project()
         for name, value in data.items():
             setattr(pro, name, value)
         pro.save()
-        return pro.id
+        pro.server_type.set(new_server_type)
+        return pro
 
     def update_project(self, user, project_id, data):
         """
@@ -567,16 +565,17 @@ class ProjectService(object):
         :param data: 更新值
         :return:
         """
+        new_server_type = ServeType.objects.filter(id__in=data.get('server_type', []))
+        del data['server_type']
+
         pro = Project.objects.filter(id=project_id)
-        pro_first = pro.first()
-        if pro_first is None:
+        if pro.first() is None:
             return False, 10111
-        if user.id != pro_first.create_user.id:
-            return False, 10108
-        if pro_first.status != '0':
+        if pro.first().status != '0':
             return False, 10112
         pro.update(**data)
-        return True, 200
+        pro.first().server_type.set(new_server_type)
+        return True, pro.first()
 
     def score_company(self, project_id, data):
         """

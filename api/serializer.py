@@ -151,11 +151,8 @@ class AddProject(serializers.Serializer):
         write_only=True,
         trim_whitespace=False,
     )
-    project_scale = serializers.CharField(
+    project_scale = serializers.IntegerField(
         label=_("项目规模"),
-        allow_blank=False,
-        write_only=True,
-        trim_whitespace=False,
     )
     project_limit = serializers.IntegerField(
         label=_("项目时限"),

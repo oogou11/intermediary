@@ -207,10 +207,11 @@ def update_owner_info(request):
     请求信息:
     {
         "organization_code": "统一社会信用代码/组织机构代码",
-        "organization_name': "机构名称",
-        "corporation': "法人",
-        "id_card_number': "身份证号",
-        "organization_picture': "证件图片"
+        "organization_name": "机构名称",
+        "corporation": "法人",
+        "id_card_number": "身份证号",
+        "organization_picture": ["证件图片", "证件图片"],
+        "status": "0-保存/1-提交审核"
     }
     返回结果:
     {
@@ -229,11 +230,14 @@ def update_owner_info(request):
         return {'code': 10013}
 
     # 更新业主信息
-    can_be_updated, owner_id = service.update_owner_info(user, data)
+    can_be_updated, owner = service.update_owner_info(user, data)
     if not can_be_updated:
         return {'code': 20018}
     # 更新用户状态--审核中
     audit_service.update_user_status(request.user.id)
+    # 短信通知管理员
+    if owner.status == '1':
+        SendMessagServie().send_user_to_verify(1, owner.organization_name)
     return {'code': 200, 'data': {}}
 
 
@@ -558,8 +562,11 @@ def create_project(request):
     if user.customer_type != '1':  # 非业主不允许操纵
         return {'code': 10108}
     data = json.loads(request.body)
-    project_id = ProjectService().create_project(request.user, data)
-    return {'code': 200, 'data': {'project_id': project_id}}
+    project = ProjectService().create_project(request.user, data)
+    if project.status == '1':
+        # 短信通知管理员
+        SendMessagServie().send_user_to_verify(3, project.proprietor.organization_name)
+    return {'code': 200, 'data': {'project_id': project.id}}
 
 
 @csrf_exempt
@@ -586,12 +593,14 @@ def project_detail(request, project_id):
             'status': "项目状态code",
             'status_name': "状态名称",
             'bid_company': [
+                {
                 'intermediary_id':  "中介公司ID",
                 'intermediary_name': "中介公司名称",
                 'bid_describe': "竞标描述",
                 'bid_money': "竞标金额",
                 'status':  "竞标状态code",
                 'status_name': "竞标状态名称"
+                }
             ],
             'bid_company_count': 1
         }
@@ -625,8 +634,13 @@ def project_edit(request, project_id):
     if request.body is None:
         return {'code': 10103}
     data = json.loads(request.body)
-    is_update, code = ProjectService().update_project(request.user, project_id, data)
-    return {'code': code}
+    is_update, code_or_pro = ProjectService().update_project(request.user, project_id, data)
+    if not is_update:
+        return {'code': code_or_pro}
+    if code_or_pro.status == '1':
+        # 短信通知管理员
+        SendMessagServie().send_user_to_verify(3, code_or_pro.proprietor.organization_name)
+    return {'code': 200}
 
 
 @csrf_exempt
