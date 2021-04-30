@@ -62,7 +62,7 @@ def upload_file(file, role=None):
     url = 'api/download?url=' + relative_path + new_file_name
     if role is not None:
         url += '&role=2'
-    return origin_name, url
+    return origin_name, settings.DOMAIN_HOST + url
 
 
 @admin.register(ServeType)

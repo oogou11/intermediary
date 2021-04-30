@@ -473,7 +473,7 @@ class ProjectService(object):
             'bid_company_count': bid_person.count(),
             'status': project.status,
             'status_name': list(filter(lambda x: x[0] == project.status, Project.STATUS_TYPE))[0][1],
-            'remark': project.file_url,
+            'remark': project.remark,
             'file_url': project.file_url,
             'contract': project.contract,
             'sys_info': project.sys_info,
