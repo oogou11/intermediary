@@ -9,38 +9,30 @@ class RegisterSerializer(serializers.Serializer):
     """
     username = serializers.CharField(
         label=_("用户名"),
-        allow_blank=False,
-        write_only=True,
-        trim_whitespace=False,
+        required=True
     )
     password = serializers.CharField(
         label=_("密码"),
         style={'input_type': 'password'},
-        trim_whitespace=False,
-        allow_blank=False,
-        write_only=True
+        required=True
     )
     email = serializers.CharField(
         label=_("邮箱"),
-        allow_blank=False,
-        write_only=True,
-        trim_whitespace=False,
+        required=True
     )
     phone = serializers.CharField(
         label=_("电话"),
-        allow_blank=False,
-        write_only=True,
-        trim_whitespace=False,
+        required=True,
     )
     verify_code = serializers.CharField(
         label=_("验证码"),
-        allow_blank=False,
-        write_only=True,
-        trim_whitespace=False,
+        required=False,
+        help_text='变更手机号需要验证码'
     )
     customer_type = serializers.ChoiceField(
         label=_("用户类型"),
         choices=['1', '2'],
+        help_text='"1":"业主", "2":"中介"'
     )
 
 class RestPasswordSerializer(serializers.Serializer):
@@ -201,20 +193,16 @@ class BidProjectSerializer(serializers.Serializer):
     """
     竞标项目 序列化
     """
-    bid_money = serializers.CharField(
+    bid_money = serializers.IntegerField(
         label=_("竞标金额"),
-        allow_blank=False,
-        write_only=True,
-        trim_whitespace=False,
     )
     describe = serializers.CharField(
         label=_("竞标描述"),
-        allow_blank=False,
-        write_only=True,
-        trim_whitespace=False,
     )
     files_info = serializers.JSONField(
-        label=_('文件')
+        label=_('文件'),
+        help_text='格式{"file":"文件-选填", "text": "文本-选填"}',
+        required=False,
     )
 
 class ProjectListSerializer(serializers.Serializer):
@@ -229,36 +217,47 @@ class ProjectListSerializer(serializers.Serializer):
         (1, "中选公告"),
         (2, "有合同的项目")
     )
+
     query_type = serializers.ChoiceField(
         label=_('查询模块数据'),
         choices=QUERY_TYPE,
+        help_text='说明: 0:采购公告，1:中选公告 2: 过滤有合同的项目',
+        required=False,
+    )
+    server_type = serializers.ListField(
+        label=_('服务类型'),
+        help_text='格式:[1,2,3]',
+        required=False,
     )
     project_name = serializers.CharField(
         label=_("项目名称"),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=False,
+        required=False,
     )
     choice_type = serializers.ChoiceField(
         label=_('选取方式'),
-        choices=CHOICE_TYPE
+        choices=CHOICE_TYPE,
+        required=False,
+        help_text='"0":择优选取,"1":"竞价选取", "2":"平均价选取", "3":"三次交互选取"'
     )
     proprietor_name = serializers.CharField(
         label=_('业主名称'),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=False,
+        required=False,
     )
     has_bid_project = serializers.ChoiceField(
         label=_('过滤参与竞标的项目'),
-        choices=[0, 1]
+        choices=[0, 1],
+        help_text='1:过滤参与的竞标项目',
+        required=False,
     )
     offset = serializers.IntegerField(
         label=_("偏移量"),
+        required=False,
     )
     limit = serializers.IntegerField(
         label=_("显示条数"),
+        required=False,
     )
+
 
 
 class CompanyListSerializer(serializers.Serializer):
@@ -267,22 +266,22 @@ class CompanyListSerializer(serializers.Serializer):
     """
     company_name = serializers.CharField(
         label=_("公司名称"),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=True,
+        required=False,
+        help_text='查询参数选填'
     )
-    service_type = serializers.CharField(
+    service_type = serializers.ListField(
         label=_("服务类型"),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=True,
+        required=False,
+        help_text='格式[1,2,4]'
     )
     rate_start = serializers.FloatField(
         label=_('星级评价'),
+        required=False,
 
     )
     rate_end = serializers.FloatField(
         label=_('星级评价'),
+        required=False,
     )
 
     offset = serializers.IntegerField(
@@ -443,15 +442,17 @@ class ActiveSeriallizer(serializers.Serializer):
     """
     互动信息
     """
-    file = serializers.JSONField(
-        label=_('内容为文件'),
-    )
-    text = serializers.CharField(
-        label=_('内容为文本'),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=True,
-    )
+    class BaseSeriallizer(serializers.Serializer):
+        file = serializers.CharField(
+            required=False,
+            help_text='选填'
+        )
+        text = serializers.CharField(
+            label=_('内容为文本'),
+            required=False,
+            help_text='选填'
+        )
+    owner_response = BaseSeriallizer()
 
 
 class ActiveListSeriallizer(serializers.Serializer):
@@ -519,15 +520,13 @@ class BidPorjectListSerializer(serializers.Serializer):
 
     project_name = serializers.CharField(
         label=_("项目名称"),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=False,
+        required=False,
+        help_text='搜索条件选填'
     )
     proprietor_name = serializers.CharField(
         label=_('业主名称'),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=False,
+        required=False,
+        help_text='搜索条件选填'
     )
     offset = serializers.IntegerField(
         label=_("偏移量"),
@@ -567,13 +566,12 @@ class ScoreCompanySerializer(serializers.Serializer):
 class BidProjectListSerializer(serializers.Serializer):
     project_name = serializers.CharField(
         label=_("项目名称"),
-        allow_blank=True,
-        write_only=True,
-        trim_whitespace=False,
+        help_text='查询参数选填'
     )
     status = serializers.ChoiceField(
         label=_('状态'),
-        choices=['0', '1']
+        choices=['0', '1'],
+        help_text='"0":"未中标","1":"中标"'
     )
     offset = serializers.IntegerField(
         label=_("偏移量"),

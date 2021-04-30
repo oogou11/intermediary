@@ -16,6 +16,7 @@ from .serializer import *
 from utils.code import response, authorize, code_info
 from django.views.decorators.csrf import csrf_exempt
 from .send_message import *
+from .res_serializer import *
 
 
 @csrf_exempt
@@ -29,17 +30,12 @@ def code_data(request):
 
 @csrf_exempt
 @swagger_auto_schema(methods=['post'], request_body=GetTokenSerializer,
-                     responses={200: ''})
+                     responses={'200': token_response})
 @api_view(['POST'])
 @response
 def get_token(request):
     """
     获取用户token
-    请求信息: {"username": "admin", "password": "123"}
-    返回格式: {"code": 200, "data": {"token": "EJIFJISJIWEF", "username": "admin", "role": "1" }}
-    role 字段说明
-        "0"-管理员, "1"-业主, "2"-中介机构
-
     """
     params = json.loads(request.body)
     username = params.get('username')
@@ -111,21 +107,12 @@ def register(request):
 
 
 @csrf_exempt
+@swagger_auto_schema(methods=['get'],  responses={'200': user_profile_response})
 @api_view(['GET'])
 @response
 def profile_info(request):
     """
     用户基本详情
-    请求参数: 无
-    返回结果
-    {"code": 200,
-    "data":
-    {
-        "username": "用户名",
-        "customer_type": "用户类型",
-        "phone": "注册电话",
-        "email": "注册邮箱",
-    }}
 
     """
     data = UserService().get_user_by_id_to_dict(request.user.id)
@@ -140,17 +127,6 @@ def profile_info(request):
 def profile_edit(request):
     """
     用户基本详情
-    请求参数: 无
-    返回结果
-    {"code": 200,
-    "data":
-    {
-        "username": "用户名",
-        "phone": "注册电话",
-        "email": "注册邮箱",
-        "verify_code": "手机验证码: 如果更改了手机号需要进行验证",
-    }}
-
     """
     if request.body is None:
         return {'code': 10103}
@@ -211,23 +187,6 @@ def reset_password(request):
 def update_owner_info(request):
     """
     完善业主信息
-    url格式: user/业主ID/owner/update
-    例如: user/123/owner/update
-    请求信息:
-    {
-        "organization_code": "统一社会信用代码/组织机构代码",
-        "organization_name": "机构名称",
-        "corporation": "法人",
-        "id_card_number": "身份证号",
-        "organization_picture": ["证件图片", "证件图片"],
-        "status": "0-保存/1-提交审核"
-    }
-    返回结果:
-    {
-        "code": 200,
-        "msg": "success",
-        "data": {}
-    }
     """
     if request.user.customer_type != '1':
         return {'code': 10109}
@@ -251,6 +210,7 @@ def update_owner_info(request):
 
 
 @csrf_exempt
+@swagger_auto_schema(methods=['get'],   responses={'200': owner_detail_response})
 @api_view(['GET'])
 @authorize
 @response
@@ -275,10 +235,7 @@ def owner_detail(request):
 @response
 def select_bid_company(request):
     """
-    业主选表
-    请求参数:
-    返回结果:
-    {"code":200, "msg": "success"}
+    业主选标
     """
     if request.body is None:
         return {'code': 10103}
@@ -297,7 +254,7 @@ def select_bid_company(request):
 
 @csrf_exempt
 @swagger_auto_schema(methods=['post'], request_body=CompanyListSerializer,
-                     responses={200: ''})
+                     responses={'200': company_list_response})
 @api_view(['POST'])
 @response
 def company_list(request):
@@ -324,36 +281,13 @@ def company_list(request):
 
 
 @csrf_exempt
+@swagger_auto_schema(methods=['get'],  responses={'200': company_detail_response})
 @api_view(['GET'])
 @authorize
 @response
 def company_detail(request):
     """
     中介详情
-    请求参数:
-    返回结果:
-    "intermediary_id": "ID",
-    "organization_code": "统一社会信用代码/组织机构代码",
-    "organization_name": "机构名称",
-    "corporation" : "法人",
-    "service_type": "服务类型",
-    "service_type_name": "服务类型名称",
-    "enterprise_type": "机构类型",
-    "enterprise_type_name": "机构类型名称",
-    "service_content": "服务事项",
-    "address" : "公司地址",
-    "is_union":  "是否联合体",
-    "id_card_front_url": "法人身份证正面",
-    "id_card_back_url": "法人身份证被面",
-    "remark": "备注",
-    "contract_person": "联系人",
-    "co_id_card_front_url": "联系人身份证正面",
-    "co_id_card_back_url: "联系人身份证被面",
-    "authorize_url": "授权书",
-    "qualification_info": "资质说明",
-    "qualification_list": [{"name": "资质名称", "url": "资质图片"}]
-    "status": "状态--0:保存操作/1:提交审核操作"
-    "status_name": "状态名称: 0-保存，1：提交"
     """
     user = request.user
     if user.customer_type != '2':
@@ -371,35 +305,6 @@ def company_detail(request):
 def update_company_info(request):
     """
     完善中介信息
-    url格式: user/中介ID/company/update
-    例如: user/3321/company/update
-    请求信息:
-    {
-        "organization_code": "统一社会信用代码/组织机构代码",
-        "organization_name": "机构名称",
-        "corporation" : "法人",
-        "service_type": [],
-        "enterprise_type": "机构类型",
-        "service_content": "服务事项",
-        "address" : "公司地址",
-        "is_union":  "是否联合体",
-        "id_card_front_url": "法人身份证正面",
-        "id_card_back_url": "法人身份证被面",
-        "remark": "备注",
-        "contract_person": "联系人",
-        "co_id_card_front_url": "联系人身份证正面",
-        "co_id_card_back_url: "联系人身份证被面",
-        "authorize_url": "授权书",
-        "qualification_info": "资质说明",
-        "qualification_list": [{"name": "资质名称", "url": "资质图片"}]
-        "status": "状态--0:保存操作/1:提交审核操作"
-    }
-    返回结果:
-    {
-        'code': 200,
-        'msg': 'success',
-        'data': {}
-    }
     """
     if request.user.customer_type != '2':
         return {'code': 10109}
@@ -568,8 +473,6 @@ def admin_service_type(request):
 def create_project(request):
     """
     业主创建项目
-    请求参数:
-    返回结果:
     """
     user = request.user
     if user.customer_type != '1':  # 非业主不允许操纵
@@ -583,42 +486,13 @@ def create_project(request):
 
 
 @csrf_exempt
+@swagger_auto_schema(methods=['get'], responses={'200': project_detail_response})
 @api_view(['GET'])
 @authorize
 @response
 def project_detail(request, project_id):
     """
     获取项目详情
-    请求参数: project_id: 项目ID
-    返回结果
-    {
-        "code": 200,
-        "msg": "success",
-        "data": {
-            'id': "项目ID",
-            'project_name': "项目名称",
-            'content': "项目内容",
-            'project_scale': "项目规模",
-            'qualification': "资质等级"],
-            'begin_time': "项目开始时间",
-            'finish_time': "项目结束时间",
-            'project_limit': "项目期限",
-            'status': "项目状态code",
-            'status_name': "状态名称",
-            'bid_company': [
-                {
-                'intermediary_id':  "中介公司ID",
-                'intermediary_name': "中介公司名称",
-                'bid_describe': "竞标描述",
-                'bid_money': "竞标金额",
-                'status':  "竞标状态code",
-                'status_name': "竞标状态名称"
-                }
-            ],
-            'bid_company_count': 1
-        }
-
-    }
     """
     if project_id is None:
         return {'code': 10103}
@@ -638,9 +512,6 @@ def project_detail(request, project_id):
 def project_edit(request, project_id):
     """
     编辑项目
-    请求参数: project_id: 项目ID
-    返回结果
-    :return:
     """
     if project_id is None:
         return {'code': 10103}
@@ -685,20 +556,6 @@ def score_company(request):
 def bid_project(request, project_id):
     """
     竞标项目
-    url格式: http://domian/api/bid/project/项目ID
-    例如: http://domian/api/bid/project/1234
-    请求信息:
-    {
-        "bid_money": 20000,
-        "describe": "竞标描述"
-        "files_info": ["选填"]
-    }
-    返回结果:
-    {
-        "code": 200,
-        "msg": "success",
-        "data": {}
-    }
     """
     params = json.loads(request.body)
     service = ProjectService()
@@ -715,15 +572,13 @@ def bid_project(request, project_id):
 
 @csrf_exempt
 @swagger_auto_schema(methods=['post'], request_body=BidProjectListSerializer,
-                     responses={200: ''})
+                     responses={'200': project_list_response})
 @api_view(['POST'])
 @authorize
 @response
 def bid_project_list(request):
     """
     项目竞标列表
-    :param request:
-    :return:
     """
     if request.user.customer_type != '2':
         return {'code': 10117}
@@ -742,14 +597,13 @@ def bid_project_list(request):
 
 
 @csrf_exempt
+@swagger_auto_schema(methods=['get'],  responses={'200': bid_detail_response})
 @api_view(['GET'])
 @authorize
 @response
 def bid_detail(request, project_id):
     """
     竞标详情
-    请求参数:
-    返回结果:
     """
     data = ProjectService().get_multi_bid_info(request.user, project_id)
     return {'code': 200, 'data': data}
@@ -764,20 +618,6 @@ def bid_detail(request, project_id):
 def update_bid_project(request, project_id):
     """
     更新竞标信息
-    url格式: http://domian/api/bid/update/竞标ID
-    例如: http://domian/api/bid/update/3321
-    请求信息:
-    {
-        "bid_money": "竞标金额",
-        "describe": "竞标描述"
-        "files_info": ["选填"]
-    }
-    返回结果:
-    {
-        "code": 200,
-        "msg": "success",
-        "data": {}
-    }
     """
     params = json.loads(request.body)
     service = ProjectService()
@@ -787,25 +627,13 @@ def update_bid_project(request, project_id):
 
 @csrf_exempt
 @swagger_auto_schema(methods=['post'], request_body=ProjectListSerializer,
-                     responses={200: ''})
+                     responses={'200': project_list_response}, )
 @api_view(['POST'])
 @authorize
 @response
 def project_list(request):
     """
     项目列表
-    请求参数: {"project_name": "项目名称","offset": 0, "limit": 10}
-    返回结果:
-    {
-        "code": 200,
-        "msg": "success",
-        "count": "总条数",
-        "data": [
-            {
-
-            }
-        ]
-    }
     """
     params = json.loads(request.body)
     offset = params.get('offset', '0')
@@ -856,34 +684,26 @@ def send_message(reqeust):
 @api_view(['POST'])
 @authorize
 @response
-def response_medium(request, bid_id):
+def response_medium(request, project_id):
     """
-    业主与中介互动
-    请求参数: bid_id:项目ID
-    请求信息 file与text 二选一或者都选:
-    {
-        'file': ['留言内容为文件-选填', ""]
-        'text': '留言内容为文本'}
-    }
+    业主回复中介
     """
-    if bid_id is None:
+    if project_id is None:
         return {'code': 10103}
     data = json.loads(request.body)
-    is_update, code = ProjectService().owner_response_medium(bid_id, data)
+    is_update, code = ProjectService().owner_response_medium(project_id, data)
     return {'code': code}
 
 
 @csrf_exempt
 @swagger_auto_schema(methods=['post'], request_body=BidPorjectListSerializer,
-                     responses={200: ''})
+                     responses={'200': company_bid_list_response})
 @api_view(['POST'])
 @authorize
 @response
 def company_bid_projects(request):
     """
     中介的竞标列表
-    :param request:
-    :return:
     """
     params = json.loads(request.body)
     offset = params.get('offset', '0')

@@ -436,8 +436,11 @@ class ProjectService(object):
         """
         bid_person = project.bid_projects.filter(is_active=True)
         bid_company = list()
+        win_bid_company = ''  # 中标公司
         if not is_website and is_owner:
             for item in bid_person:
+                if item.status == '1':
+                    win_bid_company = item.bid_company.organization_name if item.bid_company else ''
                 bid_company.append({
                     'bid_id': item.id,
                     'intermediary_id': item.bid_company.id if item.bid_company else '',
@@ -475,6 +478,7 @@ class ProjectService(object):
             'project_limit': project.project_limit,
             'bid_company': bid_company,
             'bid_company_count': bid_person.count(),
+            'win_bid_company': win_bid_company,
             'status': project.status,
             'status_name': list(filter(lambda x: x[0] == project.status, Project.STATUS_TYPE))[0][1],
             'remark': project.remark,
@@ -772,14 +776,14 @@ class ProjectService(object):
                                           ex))
                 return False, 500
 
-    def owner_response_medium(self, bid_id, data):
+    def owner_response_medium(self, project_id, data):
         """
         业主回复竞标信息
         :param bid_id: 竞标ID
         :return:
         """
         try:
-            bid_info = BidProject.objects.get(id=bid_id)
+            bid_info = BidProject.objects.get(id=project_id)
             bid_info.owner_response = data
             bid_info.update_time = datetime.datetime.now()
             bid_info.save()
