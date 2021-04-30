@@ -120,7 +120,7 @@ class ProprietorProfile(models.Model):
     organization_name = models.CharField(max_length=50, verbose_name="机构名称")
     corporation = models.CharField(max_length=100, verbose_name="法人")
     id_card_number = models.CharField(max_length=100, verbose_name="身份证号")
-    organization_picture = models.JSONField(max_length=200, verbose_name='证件图片', blank=True)
+    organization_picture = models.JSONField(max_length=200, verbose_name='证件图片', null=True, blank=True)
     status = models.CharField(default='0', max_length=3, choices=STATUS_TYPE, verbose_name='状态')
     create_time = models.DateTimeField(default=timezone.now, verbose_name='创建时间')
     update_time = models.DateTimeField(null=True, blank=True, verbose_name='更新时间')
@@ -216,7 +216,8 @@ class IntermediaryProfile(models.Model):
     authorize_url = models.CharField(max_length=200, verbose_name='授权书', null=True, blank=True)
     qualification_info = models.CharField(max_length=200, verbose_name='资质说明', choices=User_Qualifications,
                                           null=True, blank=True)
-    qualification_list = models.JSONField(default=list, max_length=200, verbose_name='资质证明')
+    qualification_list = models.JSONField(default=list, null=True, blank=True,
+                                          max_length=200, verbose_name='资质证明')
     status = models.CharField(max_length=200, verbose_name='状态', choices=Status)
     update_time = models.DateTimeField(null=True, blank=True, verbose_name='更新时间')
     super_rate = models.IntegerField(default=5, null=True, blank=True, verbose_name='上级评分')
@@ -330,12 +331,8 @@ class Project(models.Model):
                                      choices=User_Qualifications, verbose_name='资质要求')
     remark = models.CharField(max_length=200, verbose_name='其他要求', null=True, blank=True)
     file_url = models.JSONField(max_length=200, verbose_name='上传文件', null=True, blank=True)
-    file_url_address = models.FileField(upload_to='static/files/%y/%m/%d', null=True, blank=True,
-                                        verbose_name='文件存放地址')
     status = models.CharField(default='0', max_length=3, choices=STATUS_TYPE, verbose_name='项目状态')
     contract = models.JSONField(max_length=200, default=None, null=True, blank=True, verbose_name='项目合同')
-    contract_address = models.FileField(upload_to='static/files/%y/%m/%d', null=True, blank=True,
-                                        verbose_name='合同文件存放地址')
     score_level_one = models.IntegerField(default=0, verbose_name='一级服务评价')  # 满分5分
     score_level_two = models.IntegerField(default=0, verbose_name='二级服务评价')  # 满分5分
     score_level_three = models.IntegerField(default=0, verbose_name='三级服务评价')  # 满分5分

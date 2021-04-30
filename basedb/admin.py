@@ -89,21 +89,6 @@ class ServeTypeAdmin(admin.ModelAdmin):
 
     picture_show.short_description = '图片展示'
 
-    def save_model(self, request, obj, form, change):
-        """
-        :param reqeust:
-        :param obj:
-        :param form:
-        :param change:
-        :return:
-        """
-        url = ''
-        if form.files:
-            file = form.files.get('picture_url')
-            origin_name, url = upload_file(file, '2')
-        obj.picture_url = url
-        super().save_model(request, obj, form, change)
-
 
 @admin.register(SectionType)
 class SectionTypeAdmin(admin.ModelAdmin):
@@ -314,7 +299,9 @@ class ProjectAdmin(admin.ModelAdmin):
     form = AutoProjectAdminForm
     list_display = ('id', 'project_name')
     search_fields = ('project_name', )
+    readonly_fields = ('file_url_list', 'contract_list')
     list_per_page = 100
+
     def file_url_list(self, obj):
         """
         证件图片
@@ -329,15 +316,8 @@ class ProjectAdmin(admin.ModelAdmin):
             for p in obj.file_url:
                 p_url = p.get('url')
                 path_url = p_url.split('url=')[1].split('&')[0]
-                backend_prefix = path_url.split('.')[1]
-                if backend_prefix in ('jpg', 'jpeg', 'JPG', 'JPEG', 'png', 'PNG'):
-                    file_url += '<label>{}</label>' \
-                                '<img src="{}" width="400px" height="400px" />'.format(
-                        p.get('name'), prefix + path_url
-                    )
-                else:
-                    file_url += '</br>'
-                    file_url += '<a href="{}">{}</a>'.format(prefix + path_url, p.get('name')
+                file_url += '</br>'
+                file_url += '<a href="{}">{}</a>'.format(prefix + path_url, p.get('name')
                                                              )
             return mark_safe(file_url)
         else:
@@ -355,44 +335,14 @@ class ProjectAdmin(admin.ModelAdmin):
             for p in obj.contract:
                 p_url = p.get('url')
                 path_url = p_url.split('url=')[1].split('&')[0]
-                backend_prefix = path_url.split('.')[1]
-                if backend_prefix in ('jpg', 'jpeg', 'JPG', 'JPEG', 'png', 'PNG'):
-                    file_url += '<label>{}</label>' \
-                                '<img src="{}" width="400px" height="400px" />'.format(
-                        p.get('name'), prefix + path_url
-                    )
-                else:
-                    file_url += '</br>'
-                    file_url += '<a href="{}">{}</a>'.format(prefix + path_url, p.get('name')
+                file_url += '</br>'
+                file_url += '<a href="{}">{}</a>'.format(prefix + path_url, p.get('name')
                                                              )
             return mark_safe(file_url)
         else:
             return '无'
-
-    def save_model(self, reqeust, obj, form, change):
-        """
-        :param reqeust:
-        :param obj:
-        :param form:
-        :param change:
-        :return:
-        """
-        file_files = reqeust.FILES.getlist('file_url_address')  # 上传文件
-        contract_files = reqeust.FILES.getlist('contract_address')  # 合同
-        if len(file_files) > 0:
-            file_url = list()
-            for file in file_files:
-                origin_name, url = upload_file(file, '2')
-                file_url.append({'name': origin_name, 'url': url})
-            obj.file_url = file_url
-
-        if len(contract_files) > 0:
-            contract_url = list()
-            for file in contract_files:
-                origin_name, url = upload_file(file, '2')
-                contract_url.append({'name': origin_name, 'url': url})
-            obj.contract = contract_url
-        obj.save()
+    file_url_list.short_description = '上传资料展示'
+    contract_list.short_description = '合同资料展示'
 
 
 @admin.register(BidProject)

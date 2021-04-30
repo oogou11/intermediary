@@ -39,12 +39,6 @@ class AutoProjectAdminForm(forms.ModelForm):
     """
     项目
     """
-    file_url_address = forms.FileField(required=False,
-                                       widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                                       label='上传文件admin操作')
-    contract_address = forms.FileField(required=False,
-                                       widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                                       label='合同admin操作')
     sys_info = forms.CharField(widget=forms.Textarea(attrs={'rows': '3', 'cols': '80'}),
                                label="系统信息:选标",
                                required=False)
@@ -54,6 +48,15 @@ class AutoProjectAdminForm(forms.ModelForm):
 
     class Meta:
         models = Project
-        fields = '__all__'
+        fields = ('status', 'project_name', 'contract_person',
+                  'contract_phone', 'contract_phone', 'project_scale',
+                  'funds_source', 'project_limit', 'service_low_count',
+                  'service_high_count', 'content', 'choice_type',
+                  'server_type', 'create_user', 'proprietor',
+                  'create_time', 'begin_time', 'finish_time',
+                  'qualification', 'remark',
+                  'score_level_one', 'score_level_two', 'score_level_three',
+                  'score_level_four', 'score_level_five', 'average_score',
+                  'project_message', 'sys_info')
 
 
