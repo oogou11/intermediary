@@ -220,7 +220,7 @@ class IntermediaryProfile(models.Model):
                                           max_length=400, verbose_name='资质证明')
     status = models.CharField(max_length=3, verbose_name='状态', choices=Status)
     update_time = models.DateTimeField(null=True, blank=True, verbose_name='更新时间')
-    super_rate = models.IntegerField(default=5, null=True, blank=True, verbose_name='上级评分')
+    super_rate = models.IntegerField(default=100, null=True, blank=True, verbose_name='上级评分')
 
     def __str__(self):
         return self.organization_name

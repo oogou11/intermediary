@@ -101,6 +101,21 @@ class ServeTypeAdmin(admin.ModelAdmin):
 
     picture_show.short_description = '图片展示'
 
+    def save_model(self, request, obj, form, change):
+        """
+        保存
+        :param request:
+        :param obj:
+        :param form:
+        :param change:
+        :return:
+        """
+        file = request.FILES.get('picture_url')
+        if file is not None:
+            origin_name, url = upload_file(file, '1')
+            obj.picture_url = url
+        return super(ServeTypeAdmin, self).save_model(request, obj, form, change)
+
 
 @admin.register(SectionType)
 class SectionTypeAdmin(admin.ModelAdmin):
