@@ -340,6 +340,8 @@ class Project(models.Model):
     score_level_five = models.IntegerField(default=0, verbose_name='五级服务评价')  # 满分5分
     average_score = models.FloatField(default=0, verbose_name='平均分')  # 平均分，保留一位
     project_message = models.CharField(max_length=200, null=True, blank=True, verbose_name='系统流标说明')
+    equal_bid_company = models.JSONField(max_length=200, default=None, null=True, blank=True,
+                                         verbose_name='系统无法选标中介机构')
     sys_info = models.CharField(max_length=200, verbose_name='系统任务说明!', null=True, blank=True)
 
 
@@ -373,7 +375,7 @@ class BidProject(models.Model):
     create_time = models.DateTimeField(default=timezone.now, verbose_name='竞标日期')
     update_time = models.DateTimeField(null=True, blank=True, verbose_name='更新时间')
     status = models.CharField(max_length=2, default='0', choices=STATUS, verbose_name='竞标状态')
-    owner_response = models.JSONField(default=list, verbose_name='业主回复')  # 业主回复
+    owner_response = models.JSONField(default=list, null=True, blank=True, verbose_name='业主回复')  # 业主回复
     is_active = models.BooleanField(default=True, verbose_name='是否有效')  # 新竞标 会作废旧的竞标
 
     class Meta:

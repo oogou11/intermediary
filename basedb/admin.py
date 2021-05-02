@@ -368,7 +368,7 @@ class UserAdmin(admin.ModelAdmin):
         :return:
         """
         self.fields = ("statustype", "username", "phone", "email",
-                       "contacts",)
+                       "contacts", "rate")
         self.readonly_fields = ("username",)
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 

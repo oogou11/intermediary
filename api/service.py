@@ -194,6 +194,16 @@ class UserService(object):
         res = self._get_company_detail_dict(data)
         return res
 
+    def get_company_detail_by_id(self, company_id):
+        """
+        中介详情
+        :param company_id:
+        :return:
+        """
+        data = IntermediaryProfile.objects.get(id=company_id)
+        res = self._get_company_detail_dict(data)
+        return res
+
     def _get_company_detail_dict(self, data):
         res = dict()
         qualification_list = list()
@@ -238,7 +248,9 @@ class UserService(object):
             'qualification_info': data.qualification_info,
             'qualification_list': qualification_list,
             'status': data.status,
-            'status_name': list(filter(lambda x: x[0] == data.status, data.Status))[0][1]
+            'status_name': list(filter(lambda x: x[0] == data.status, data.Status))[0][1],
+            'rate': data.user.rate,
+            'create_time': data.user.create_time.strftime('%Y-%m-%d %H:%M:%S')
         })
 
         return res
@@ -428,6 +440,40 @@ class ProjectService(object):
         res = self._get_project_detail_dict(project, is_website, is_owner)
         return res
 
+    def _get_bid_company_list(self, project):
+        """
+        获取竞标公司
+        :param project:
+        :return:
+        """
+        bid_company_list = list()
+        need_show_bid_company = False
+        filter_bid_company_params = {'is_active': True}
+        # 线上谈判展示所有的竞标公司
+        if project.choice_type == "3":
+            need_show_bid_company = True
+        # 系统选标失败，则有业主在选标期自己选择
+        if project.equal_bid_company is not None and project.status == "3":
+            need_show_bid_company = True
+            filter_bid_company_params.update({'bid_company__in': project.equal_bid_company})
+
+        if need_show_bid_company:
+            bid_person = project.bid_projects.filter(**filter_bid_company_params)
+            for item in bid_person:
+                first_bid_company = item.bid_company
+                bid_company_list.append({
+                    'bid_id': item.id,
+                    'intermediary_id': first_bid_company.id if first_bid_company else '',
+                    'intermediary_name': first_bid_company.organization_name if first_bid_company else '',  # 中介公司
+                    'files_info': item.files_info,
+                    'owner_response': item.owner_response,
+                    'bid_describe': item.describe,  # 竞标描述
+                    'bid_money': item.bid_money,  # 竞标金额
+                    'status': item.status,
+                    'status_name': list(filter(lambda x: x[0] == item.status, BidProject.STATUS))[0][1]
+                })
+        return bid_company_list
+
     def _get_project_detail_dict(self, project, is_website=False, is_owner=True):
         """
         项目详情字段
@@ -435,21 +481,17 @@ class ProjectService(object):
         :return:
         """
         bid_person = project.bid_projects.filter(is_active=True)
-        bid_company = list()
         win_bid_company = ''  # 中标公司
-        if not is_website and is_owner:
-            for item in bid_person:
-                if item.status == '1':
-                    win_bid_company = item.bid_company.organization_name if item.bid_company else ''
-                bid_company.append({
-                    'bid_id': item.id,
-                    'intermediary_id': item.bid_company.id if item.bid_company else '',
-                    'intermediary_name': item.bid_company.organization_name if item.bid_company else '',  # 中介公司
-                    'bid_describe': item.describe,  # 竞标描述
-                    'bid_money': item.bid_money,  # 竞标金额
-                    'status': item.status,
-                    'status_name': list(filter(lambda x: x[0] == item.status, BidProject.STATUS))[0][1]
-                })
+        win_bid_company_id = ''  # 中标公司ID
+        win_bid_company_address = ''  # 中标机构地址
+
+        for item in bid_person:
+            first_bid_company = item.bid_company
+            if item.status == '1':
+                win_bid_company = first_bid_company.organization_name if first_bid_company else ''
+                win_bid_company_id = first_bid_company.id if first_bid_company else ''
+                win_bid_company_address = first_bid_company.address if first_bid_company else ''
+
         server_type = list()
         for se in project.server_type.all():
             server_type.append({
@@ -462,6 +504,7 @@ class ProjectService(object):
         res = {
             'id': project.id,
             'project_name': project.project_name,
+            'proprietor_name': project.proprietor.organization_name,
             'contract_person': project.contract_person,
             'contract_phone': project.contract_phone,
             'project_scale': project.project_scale,  # 项目规模
@@ -476,9 +519,11 @@ class ProjectService(object):
             'begin_time': project.begin_time.strftime('%Y-%m-%d %H:%M:%S'),
             'finish_time': project.finish_time.strftime('%Y-%m-%d %H:%M:%S'),
             'project_limit': project.project_limit,
-            'bid_company': bid_company,
+            'bid_company': self._get_bid_company_list(project),
             'bid_company_count': bid_person.count(),
             'win_bid_company': win_bid_company,
+            'win_bid_company_id': win_bid_company_id,
+            'win_bid_company_address': win_bid_company_address,
             'status': project.status,
             'status_name': list(filter(lambda x: x[0] == project.status, Project.STATUS_TYPE))[0][1],
             'remark': project.remark,
@@ -545,15 +590,19 @@ class ProjectService(object):
         :param data: 参数
         :return:
         """
-        begin_time = data.get('begin_time')
-        finish_time = data.get('finish_time')
         new_server_type = ServeType.objects.filter(id__in=data.get('server_type', []))
         del data['server_type']
-        data.update({'begin_time': datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S'),
-                     'finish_time': datetime.datetime.strptime(finish_time, '%Y-%m-%d %H:%M:%S'),
-                     'create_user': user,
+        data.update({'create_user': user,
                      'proprietor': user.proprietor_user.first()
                      })
+
+        project_time_range = data.get('project_time_range', [])
+        if len(project_time_range) > 0:
+            data.update({
+                'begin_time': datetime.datetime.strptime(project_time_range[0], '%Y-%m-%d %H:%M:%S'),
+                'finish_time': datetime.datetime.strptime(project_time_range[1], '%Y-%m-%d %H:%M:%S')
+            })
+        del data['project_time_range']
 
         pro = Project()
         for name, value in data.items():
@@ -577,6 +626,15 @@ class ProjectService(object):
             return False, 10111
         if pro.first().status != '0':
             return False, 10112
+
+        project_time_range = data.get('project_time_range', [])
+        if len(project_time_range) > 0:
+            data.update({
+                'begin_time': datetime.datetime.strptime(project_time_range[0], '%Y-%m-%d %H:%M:%S'),
+                'finish_time': datetime.datetime.strptime(project_time_range[1], '%Y-%m-%d %H:%M:%S')
+            })
+        del data['project_time_range']
+
         pro.update(**data)
         pro.first().server_type.set(new_server_type)
         return True, pro.first()
@@ -756,11 +814,6 @@ class ProjectService(object):
         bid_info = BidProject.objects.filter(bid_user=medium_user.id,
                                              project_id=project_id,
                                              is_active=True)
-        # 判断是否已经有业主回复
-        first_bid_info = bid_info.first()
-        # 业主未回复，不可重复参与竞标
-        if len(first_bid_info.owner_response.keys()) == 0:
-            return False, 20026
         # 添加事物
         with transaction.atomic():
             try:
@@ -952,7 +1005,7 @@ class AuditService(object):
         :param project_id: 项目ID
         :return:
         """
-        project = Project.object.get(id=project_id)
+        project = Project.objects.get(id=project_id)
         if project.choice_type == '0':  # 择优选取
             is_selected, bid_company = cls()._select_the_best(project)
         elif project.choice_type == '1':  # 竞价选取
@@ -964,6 +1017,8 @@ class AuditService(object):
         if not is_selected:
             project.status = '3'  # 只有该状态--选表中--业主才会干预选标
             project.sys_info = '系统无法自动选标，请人工选标!'
+            if isinstance(bid_company, list):
+                project.equal_bid_company = bid_company
             project.save()
         else:
             # 竞标成功发送短信
@@ -991,15 +1046,19 @@ class AuditService(object):
         with transaction.atomic():
             try:
                 bid_companies = project.bid_projects.order_by('-bid_user__rate')
-                first_rate = bid_companies.frist().bid_user__rate
+                first_company = bid_companies.first()
+                first_rate = first_company.bid_user.rate
 
                 # 相同评分的 人工选标
-                for i in range(1, bid_companies.count() - 1):
-                    if bid_companies[i].bid_user__rate == first_rate:
-                        return False
+                equal_company_ids = [first_company.bid_company.id]
+                for i in range(1, bid_companies.count()):
+                    if bid_companies[i].bid_user.rate == first_rate:
+                        equal_company_ids.append(bid_companies[i].bid_company.id)
+                if len(equal_company_ids) > 1:
+                    return False, equal_company_ids
                 bid_company = bid_companies.first()
                 if bid_company is not None:
-                    bid_company.status = '2'  # 中标
+                    bid_company.status = '1'  # 中标
                     bid_company.save()
                     project.status = '4'  # 已选表
                     project.save()
@@ -1024,11 +1083,14 @@ class AuditService(object):
                 bid_company = bid_companies.first()
 
                 # 相同最低价格，人工选标
-                for i in range(1, bid_companies.count() - 1):
+                equal_company_ids = [bid_company.bid_company.id]
+                for i in range(1, bid_companies.count()):
                     if bid_companies[i].bid_money == bid_company.bid_money:
-                        return False
+                        equal_company_ids.append(bid_companies[i].bid_company.id)
+                if len(equal_company_ids) > 1:
+                    return False, equal_company_ids
                 if bid_company is not None:
-                    bid_company.status = '2'  # 中标
+                    bid_company.status = '1'  # 中标
                     bid_company.save()
                     project.status = '4'  # 已选表
                     project.save()
@@ -1055,26 +1117,27 @@ class AuditService(object):
             n += 1
         average_money = total_money / n
         index = 0
-        for i in range(1, len(bid_companies) - 1):
+        for i in range(1, len(bid_companies)):
             if abs(average_money) > abs(bid_companies[i].bid_money):
                 average_money = bid_companies[i].bid_money
                 index = i
         bid_company = bid_companies[index]
-
         current_money = bid_company.bid_money
 
         total_count = 0
+        equal_company_ids = [bid_company.bid_company.id]
         for com in bid_companies:
-            if com.bid_company == current_money:
+            if com.bid_money == current_money:
                 total_count += 1
+                equal_company_ids.append(com.bid_company.id)
 
         # 有多个相同价格的
         if total_count > 1:
-            return False
+            return False, list(set(equal_company_ids))
 
         with transaction.atomic():
             try:
-                bid_company.status = '2'  # 中标
+                bid_company.status = ''  # 中标
                 bid_company.save()
                 project.status = '4'  # 已选表
                 project.save()

@@ -496,9 +496,6 @@ def project_detail(request, project_id):
     """
     if project_id is None:
         return {'code': 10103}
-    if request.user.customer_type != '1':
-        # 非业主无权访问
-        return {'code': 10108}
     data = ProjectService().get_project_by_id(project_id, is_owner=True)
     return {'code': 200, 'data': data}
 
@@ -561,8 +558,14 @@ def bid_project(request, project_id):
     service = ProjectService()
     # 判断是否已经参与竞标
     has_been_bided = service.get_bid_project_info(request.user, project_id)
+
+    # 已经参与了竞标，新的更信息
     if has_been_bided is not None:
-        return {'code': 10114}
+        is_updated, code = service.update_bid_info(project_id, request.user, params)
+        if not is_updated:
+            return {'code': code}
+        else:
+            return {'code': 200}
     during_biding = service.get_project_by_id(project_id=project_id)
     if during_biding.get('status', None) != '2':
         return {'code': 10115}
@@ -715,3 +718,10 @@ def company_bid_projects(request):
     total_count, data = ProjectService().get_medium_bid_project_list(request.user, params, offset, limit)
     return {'code': 200, 'count': total_count, 'data': data}
 
+
+@csrf_exempt
+@api_view(['GET'])
+@response
+def test_task(request, project_id):
+    AuditService.finish_biding_project(project_id)
+    return {'code': 200}

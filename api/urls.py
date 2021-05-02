@@ -42,6 +42,8 @@ urlpatterns = [
     path('company/list/', views.company_list),  # 中介列表
     path('company/bid/project/list/', views.company_bid_projects),  # 中介参与的项目竞标
     path('response/bid/company/<str:project_id>/', views.response_medium),  # 回复竞标中介信息
+
+    path('test/task/<str:project_id>/', views.test_task)
 ]
 
 urlpatterns += router.urls

@@ -96,6 +96,18 @@ def company_list(request):
 
 
 @csrf_exempt
+@swagger_auto_schema(methods=['get'],  responses={200: ''})
+@api_view(['GET'])
+@response
+def company_detail(request, company_id):
+    """
+    中介详情
+    """
+    data = UserService().get_company_detail_by_id(company_id)
+    return {'code': 200, 'data': data}
+
+
+@csrf_exempt
 @swagger_auto_schema(methods=['get'], manual_parameters=[],
                      responses={200: ''})
 @api_view(['GET'])

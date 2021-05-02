@@ -57,6 +57,6 @@ class AutoProjectAdminForm(forms.ModelForm):
                   'qualification', 'remark',
                   'score_level_one', 'score_level_two', 'score_level_three',
                   'score_level_four', 'score_level_five', 'average_score',
-                  'project_message', 'sys_info')
+                  'project_message', 'sys_info', 'equal_bid_company')
 
 
