@@ -811,10 +811,19 @@ class ProjectService(object):
         """
         data = BidProject.objects.filter(bid_company=intermediary_id).order_by('-create_time')
         first_info = data.first()
-        owner_response = list()
-        for item in data:
+        owner_response = {'first_response': [], 'second_response': [], 'third_response': []}
+        for i, item in enumerate(data):
             if len(item.owner_response) > 0:
-                owner_response.append(item.owner_response)
+                key = None
+                if i == 0:
+                    key = 'first_response'
+                elif i == 1:
+                    key = 'second_response'
+                elif i == 2:
+                    key = 'third_response'
+                if key is not None:
+                    owner_response.update({'third_response': item.owner_response})
+
         res = {'bid_id': first_info.id,
                'project_name': first_info.project.project_name,
                'bid_money': first_info.bid_money,
@@ -822,9 +831,9 @@ class ProjectService(object):
                'describe': first_info.describe,
                'create_time': first_info.create_time.strftime('%Y-%m-%d %H:%M:%S'),
                'status': first_info.status,
-               'status_name': list(filter(lambda x: x[0] == first_info.status, BidProject.STATUS))[0][1],
-               'owner_response': owner_response
+               'status_name': list(filter(lambda x: x[0] == first_info.status, BidProject.STATUS))[0][1]
                }
+        res.update(owner_response)
         return res
 
     def update_bid_info(self, project_id, medium_user, data):

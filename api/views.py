@@ -253,7 +253,7 @@ def select_bid_company(request):
 
 
 @csrf_exempt
-@swagger_auto_schema(methods=['get'],   responses={200: ''})
+@swagger_auto_schema(methods=['get'],   responses={'200': owner_view_bid_detail_response})
 @api_view(['GET'])
 @authorize
 @response
