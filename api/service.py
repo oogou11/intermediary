@@ -854,14 +854,14 @@ class ProjectService(object):
                                           ex))
                 return False, 500
 
-    def owner_response_medium(self, intermediary_id, data):
+    def owner_response_medium(self, bid_id, data):
         """
         业主回复竞标信息
         :param bid_id: 竞标ID
         :return:
         """
         try:
-            bid_info = BidProject.objects.filter(bid_company=intermediary_id, is_active=True).first()
+            bid_info = BidProject.objects.filter(id=bid_id).first()
             if bid_info is None:
                 return False, 20027
             bid_info.owner_response = data

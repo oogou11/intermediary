@@ -696,12 +696,10 @@ def response_medium(request):
         return {'code': 10103}
     data = json.loads(request.body)
     owner_response = data.get('owner_response', None)
-    intermediary_id = data.get('intermediary_id', None)
-    if intermediary_id is None:
+    bid_id = data.get('bid_id', None)
+    if bid_id is None or owner_response is None:
         return {'code': 10103}
-    if owner_response is None:
-        return {'code': 10103}
-    is_update, code = ProjectService().owner_response_medium(intermediary_id, owner_response)
+    is_update, code = ProjectService().owner_response_medium(bid_id, owner_response)
     return {'code': code}
 
 
