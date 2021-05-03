@@ -55,6 +55,10 @@ def project_list(request):
             params.update({'status': '4'})
         if query_type == 3:  # 有合同的项目列表
             params.update({'query_contract': True})
+        if query_type == 4:  # 采购失败
+            params.update({'status': '6'})
+        if query_type == 5:  # 结束
+            params.update({'status': '5'})
     service = ProjectService()
     total_count, data = service.get_project_list(query=params, offset=offset, limit=limit, is_website=True)
     return {'code': 200, 'count': total_count, 'data': data}
