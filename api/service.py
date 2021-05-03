@@ -803,13 +803,13 @@ class ProjectService(object):
         pro.save()
         return True, data.first()
 
-    def get_bid_detail_for_owner(self, intermediary_id):
+    def get_bid_detail_for_owner(self, intermediary_id, project_id):
         """
         给业主展示竞标详情
         :param intermediary_id: 中介机构ID
         :return:
         """
-        data = BidProject.objects.filter(bid_company=intermediary_id).order_by('-create_time')
+        data = BidProject.objects.filter(bid_company=intermediary_id, project=project_id).order_by('-create_time')
         res = list()
         for item in data:
             res.append({'bid_id': item.id,

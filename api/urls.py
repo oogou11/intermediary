@@ -26,7 +26,7 @@ urlpatterns = [
     path('user/owner/update/', views.update_owner_info),  # 完善业主信息
     path('owner/detail/', views.owner_detail),  # 业主详情
     path('owner/select/bid/company/', views.select_bid_company),  # 业主选标
-    path('owner/view/bid/detail/<str:intermediary_id>/', views.owner_view_bid_detail),  # 业主查看竞标详情
+    path('owner/view/bid/detail/<str:intermediary_id>/<str:project_id>/', views.owner_view_bid_detail),  # 业主查看竞标详情
     path('project/list/', views.project_list),  # 项目列表
     path('project/add/', views.create_project),  # 业主创建项目
     path('project/detail/<str:project_id>/', views.project_detail),  # 项目详情

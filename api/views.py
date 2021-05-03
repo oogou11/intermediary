@@ -109,6 +109,7 @@ def register(request):
 @csrf_exempt
 @swagger_auto_schema(methods=['get'],  responses={'200': user_profile_response})
 @api_view(['GET'])
+@authorize
 @response
 def profile_info(request):
     """
@@ -257,13 +258,13 @@ def select_bid_company(request):
 @api_view(['GET'])
 @authorize
 @response
-def owner_view_bid_detail(request, intermediary_id):
+def owner_view_bid_detail(request, intermediary_id, project_id):
     """
     业主查看竞标详情
     """
-    if intermediary_id is None:
+    if intermediary_id is None or project_id is None:
         return {'code': 10103}
-    data = ProjectService().get_bid_detail_for_owner(intermediary_id)
+    data = ProjectService().get_bid_detail_for_owner(intermediary_id, project_id)
     return {'code': 200, 'data': data}
 
 
