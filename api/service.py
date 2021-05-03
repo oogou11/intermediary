@@ -1056,13 +1056,12 @@ class AuditService(object):
                         equal_company_ids.append(bid_companies[i].bid_company.id)
                 if len(equal_company_ids) > 1:
                     return False, equal_company_ids
-                bid_company = bid_companies.first()
-                if bid_company is not None:
-                    bid_company.status = '1'  # 中标
-                    bid_company.save()
+                if first_company is not None:
+                    first_company.status = '1'  # 中标
+                    first_company.save()
                     project.status = '4'  # 已选表
                     project.save()
-                    return True, bid_company
+                    return True, first_company
             except Exception as ex:
                 error_logger.error('time:{}，project_id:{},function:{},msg:{}'.
                                    format(datetime.datetime.now(),
@@ -1232,8 +1231,8 @@ class SendMessagServie(object):
         :param project: 项目信息
         :return:
         """
-        phones = ['86{}'.format(win_company.user.phone)]
-        SendMessage().send(phones, self.win_bid, [project.project_name, win_company.organization_name])
+        phones = ['86{}'.format(win_company.bid_user.phone)]
+        SendMessage().send(phones, self.win_bid, [project.project_name, win_company.bid_company.organization_name])
 
 
 
