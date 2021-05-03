@@ -810,22 +810,18 @@ class ProjectService(object):
         :return:
         """
         data = BidProject.objects.filter(bid_company=intermediary_id).order_by('-create_time')
-        first_info = data.first()
-        owner_response_list = list()
+        res = list()
         for item in data:
-            if item.owner_response is not None:
-                owner_response_list.append(item.owner_response)
-
-        res = {'bid_id': first_info.id,
-               'project_name': first_info.project.project_name,
-               'bid_money': first_info.bid_money,
-               'files_info': first_info.files_info,
-               'describe': first_info.describe,
-               'create_time': first_info.create_time.strftime('%Y-%m-%d %H:%M:%S'),
-               'status': first_info.status,
-               'status_name': list(filter(lambda x: x[0] == first_info.status, BidProject.STATUS))[0][1],
-               'owner_response': owner_response_list
-               }
+            res.append({'bid_id': item.id,
+                       'project_name': item.project.project_name,
+                        'bid_money': item.bid_money,
+                        'files_info': item.files_info,
+                        'describe': item.describe,
+                        'create_time': item.create_time.strftime('%Y-%m-%d %H:%M:%S'),
+                        'status': item.status,
+                        'status_name': list(filter(lambda x: x[0] == item.status, BidProject.STATUS))[0][1],
+                        'owner_response': item.owner_response
+                   })
         return res
 
     def update_bid_info(self, project_id, medium_user, data):
