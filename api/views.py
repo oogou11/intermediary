@@ -702,14 +702,21 @@ def send_message(reqeust):
 @api_view(['POST'])
 @authorize
 @response
-def response_medium(request, bid_id):
+def response_medium(request):
     """
     业主回复中介
     """
-    if bid_id is None:
+
+    if request.body is None:
         return {'code': 10103}
     data = json.loads(request.body)
-    is_update, code = ProjectService().owner_response_medium(bid_id, data)
+    owner_response = data.get('owner_response', None)
+    intermediary_id = data.get('intermediary_id', None)
+    if intermediary_id is None:
+        return {'code': 10103}
+    if owner_response is None:
+        return {'code': 10103}
+    is_update, code = ProjectService().owner_response_medium(intermediary_id, owner_response)
     return {'code': code}
 
 

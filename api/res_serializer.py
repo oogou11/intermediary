@@ -72,14 +72,6 @@ class BaseAPIProjectList(serializers.Serializer):
     data = ResAPIProjectList(many=True)
 
 
-class OwnerResponseSerializer(serializers.Serializer):
-    """
-    业主回复
-    """
-    text = serializers.CharField(label=_('回复的文本内容'), help_text='选填')
-    files_info = serializers.ListField(label=_('附件信息'), help_text='竞标时上传的文件')
-
-
 class ResBidDetailSerializers(serializers.Serializer):
     """竞标详情"""
 
@@ -97,7 +89,7 @@ class ResBidDetailSerializers(serializers.Serializer):
         update_time = serializers.CharField(label=_('更细时间'), help_text='2021-04-30 15:20:57')
         status = serializers.CharField(label=_('竞标状态'))
         status_name = serializers.CharField(label=_('状态名称'))
-        owner_response = OwnerResponseSerializer(many=True)
+        owner_response = serializers.ListField(label='业主回复')
     code = serializers.IntegerField(
         label=_('返回状态吗'),
         help_text='成功是200,非200参考业务码接口'
@@ -125,9 +117,7 @@ class ResOwnerViewBidDetailSerializer(serializers.Serializer):
         update_time = serializers.CharField(label=_('更细时间'), help_text='2021-04-30 15:20:57')
         status = serializers.CharField(label=_('竞标状态'))
         status_name = serializers.CharField(label=_('状态名称'))
-        first_response = OwnerResponseSerializer(label='业主第一次回复', many=True)
-        second_response = OwnerResponseSerializer(label='业主第二次回复', many=True)
-        third_response = OwnerResponseSerializer(label='业主第三次回复', many=True)
+        owner_response = serializers.ListField(label='业主回复')
     code = serializers.IntegerField(
         label=_('返回状态吗'),
         help_text='成功是200,非200参考业务码接口'

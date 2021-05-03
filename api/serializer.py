@@ -442,17 +442,14 @@ class ActiveSeriallizer(serializers.Serializer):
     """
     互动信息
     """
-    class BaseSeriallizer(serializers.Serializer):
-        file = serializers.CharField(
-            required=False,
-            help_text='选填'
-        )
-        text = serializers.CharField(
-            label=_('内容为文本'),
-            required=False,
-            help_text='选填'
-        )
-    owner_response = BaseSeriallizer()
+    bid_id = serializers.CharField(
+        label=_('竞标ID'),
+        required=True
+    )
+    owner_response = serializers.CharField(
+        label=_('回复内容'),
+        required=True
+    )
 
 
 class ActiveListSeriallizer(serializers.Serializer):

@@ -811,18 +811,10 @@ class ProjectService(object):
         """
         data = BidProject.objects.filter(bid_company=intermediary_id).order_by('-create_time')
         first_info = data.first()
-        owner_response = {'first_response': [], 'second_response': [], 'third_response': []}
-        for i, item in enumerate(data):
-            if len(item.owner_response) > 0:
-                key = None
-                if i == 0:
-                    key = 'first_response'
-                elif i == 1:
-                    key = 'second_response'
-                elif i == 2:
-                    key = 'third_response'
-                if key is not None:
-                    owner_response.update({key: item.owner_response})
+        owner_response_list = list()
+        for item in data:
+            if item.owner_response is not None:
+                owner_response_list.append(item.owner_response)
 
         res = {'bid_id': first_info.id,
                'project_name': first_info.project.project_name,
@@ -831,9 +823,9 @@ class ProjectService(object):
                'describe': first_info.describe,
                'create_time': first_info.create_time.strftime('%Y-%m-%d %H:%M:%S'),
                'status': first_info.status,
-               'status_name': list(filter(lambda x: x[0] == first_info.status, BidProject.STATUS))[0][1]
+               'status_name': list(filter(lambda x: x[0] == first_info.status, BidProject.STATUS))[0][1],
+               'owner_response': owner_response_list
                }
-        res = {**res, **owner_response}
         return res
 
     def update_bid_info(self, project_id, medium_user, data):
@@ -862,15 +854,17 @@ class ProjectService(object):
                                           ex))
                 return False, 500
 
-    def owner_response_medium(self, bid_id, data):
+    def owner_response_medium(self, intermediary_id, data):
         """
         业主回复竞标信息
         :param bid_id: 竞标ID
         :return:
         """
         try:
-            bid_info = BidProject.objects.get(id=bid_id)
-            bid_info.owner_response = data.get('owner_response', [])
+            bid_info = BidProject.objects.filter(bid_company=intermediary_id, is_active=True).first()
+            if bid_info is None:
+                return False, 20027
+            bid_info.owner_response = data
             bid_info.update_time = datetime.datetime.now()
             bid_info.save()
             return True, 200
