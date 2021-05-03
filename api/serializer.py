@@ -442,8 +442,8 @@ class ActiveSeriallizer(serializers.Serializer):
     """
     互动信息
     """
-    bid_id = serializers.CharField(
-        label=_('竞标ID'),
+    intermediary_id = serializers.CharField(
+        label=_('中介ID'),
         required=True
     )
     owner_response = serializers.CharField(
