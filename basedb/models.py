@@ -369,9 +369,9 @@ class BidProject(models.Model):
     bid_company = models.ForeignKey(to=IntermediaryProfile, null=True, blank=False,
                                     related_name='bid_project_intermediary', on_delete=models.SET_NULL,
                                     verbose_name='竞标中介')
-    bid_money = models.IntegerField(verbose_name='竞标金额')
+    bid_money = models.IntegerField(null=True, blank=True, verbose_name='竞标金额')
     files_info = models.JSONField(null=True, blank=True, verbose_name='竞标文件')
-    describe = models.CharField(max_length=200, verbose_name='竞标描述')
+    describe = models.CharField(max_length=200, null=True, blank=True, verbose_name='竞标描述')
     create_time = models.DateTimeField(default=timezone.now, verbose_name='竞标日期')
     update_time = models.DateTimeField(null=True, blank=True, verbose_name='更新时间')
     status = models.CharField(max_length=2, default='0', choices=STATUS, verbose_name='竞标状态')

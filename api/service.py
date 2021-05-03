@@ -803,6 +803,30 @@ class ProjectService(object):
         pro.save()
         return True, data.first()
 
+    def get_bid_detail_for_owner(self, intermediary_id):
+        """
+        给业主展示竞标详情
+        :param intermediary_id: 中介机构ID
+        :return:
+        """
+        data = BidProject.objects.filter(bid_company=intermediary_id).order_by('-create_time')
+        first_info = data.first()
+        owner_response = list()
+        for item in data:
+            if len(item.owner_response) > 0:
+                owner_response.append(item.owner_response)
+        res = {'bid_id': first_info.id,
+               'project_name': first_info.project.project_name,
+               'bid_money': first_info.bid_money,
+               'files_info': first_info.files_info,
+               'describe': first_info.describe,
+               'create_time': first_info.create_time.strftime('%Y-%m-%d %H:%M:%S'),
+               'status': first_info.status,
+               'status_name': list(filter(lambda x: x[0] == first_info.status, BidProject.STATUS))[0][1],
+               'owner_response': owner_response
+               }
+        return res
+
     def update_bid_info(self, project_id, medium_user, data):
         """
         更新竞标信息

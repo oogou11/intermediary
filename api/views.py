@@ -253,6 +253,21 @@ def select_bid_company(request):
 
 
 @csrf_exempt
+@swagger_auto_schema(methods=['get'],   responses={200: ''})
+@api_view(['GET'])
+@authorize
+@response
+def owner_view_bid_detail(request, intermediary_id):
+    """
+    业主查看竞标详情
+    """
+    if intermediary_id is None:
+        return {'code': 10103}
+    data = ProjectService().get_bid_detail_for_owner(intermediary_id)
+    return {'code': 200, 'data': data}
+
+
+@csrf_exempt
 @swagger_auto_schema(methods=['post'], request_body=CompanyListSerializer,
                      responses={'200': company_list_response})
 @api_view(['POST'])
