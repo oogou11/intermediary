@@ -574,7 +574,7 @@ def bid_project(request, project_id):
     # 判断是否已经参与竞标
     has_been_bided = service.get_bid_project_info(request.user, project_id)
 
-    # 已经参与了竞标，新的更信息
+    # 已经参与了竞标，新的，更信息
     if has_been_bided is not None:
         is_updated, code = service.update_bid_info(project_id, request.user, params)
         if not is_updated:
@@ -625,22 +625,6 @@ def bid_detail(request, project_id):
     """
     data = ProjectService().get_multi_bid_info(request.user, project_id)
     return {'code': 200, 'data': data}
-
-
-@csrf_exempt
-@swagger_auto_schema(methods=['post'], request_body=BidProjectSerializer,
-                     responses={200: ''})
-@api_view(['POST'])
-@authorize
-@response
-def update_bid_project(request, project_id):
-    """
-    更新竞标信息
-    """
-    params = json.loads(request.body)
-    service = ProjectService()
-    is_updated, code = service.update_bid_info(project_id, request.user, params)
-    return {'code': code}
 
 
 @csrf_exempt

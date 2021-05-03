@@ -39,7 +39,6 @@ urlpatterns = [
     path('list/bid/project/', views.bid_project_list),  # 竞标项目列表
     path('bid/project/<str:project_id>/', views.bid_project),  # 竞标
     path('bid/detail/<str:project_id>/', views.bid_detail),  # 竞标详情
-    path('bid/update/<str:project_id>/', views.update_bid_project),  # 更新竞标信息
     path('company/list/', views.company_list),  # 中介列表
     path('company/bid/project/list/', views.company_bid_projects),  # 中介参与的项目竞标
     path('response/bid/company/', views.response_medium),  # 回复竞标中介信息

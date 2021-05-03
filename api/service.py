@@ -839,6 +839,10 @@ class ProjectService(object):
         bid_info = BidProject.objects.filter(bid_user=medium_user.id,
                                              project_id=project_id,
                                              is_active=True)
+        current_bid_info = bid_info.first()
+        # 判断是否是否线上谈判，线下竞标需要业主回复
+        if current_bid_info.project.choice_type == '3' and current_bid_info.owner_response is None:
+            return False, 20026
         # 添加事物
         with transaction.atomic():
             try:
