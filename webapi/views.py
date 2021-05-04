@@ -84,8 +84,8 @@ def company_list(request):
         limit = params.get('limit', '10')
         company_name = params.get('company_name', None)
         service_type = params.get('service_type', None)
-        rate_start = params.get('rate_start', '0')
-        rate_end = params.get('rate_end', '0')
+        rate_start = params.get('rate_start', None)
+        rate_end = params.get('rate_end', None)
     if isinstance(offset, str):
         offset = int(offset)
     if isinstance(limit, str):

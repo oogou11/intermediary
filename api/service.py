@@ -40,7 +40,7 @@ class UserService(object):
             'username': user.username,
             'customer_type': user.customer_type,
             'phone': user.phone,
-            'email': user.email,
+            'email': user.email
         }
         # 中介有评分
         if user.customer_type == '2':
